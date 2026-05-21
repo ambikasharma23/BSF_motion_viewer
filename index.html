@@ -3,254 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>BeeSense Flex - Device on Floor | Proper Orientation</title>
+    <title>BeeSense Flex - vibration & location mapping</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body {
+        * {
             margin: 0;
-            overflow: hidden;
-            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
-            background: #e8eaed;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        .control-panel {
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            overflow: hidden;
+        }
+        
+        #map {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(8px);
-            border-radius: 12px;
-            padding: 12px 15px;
-            color: #1a1a2e;
-            z-index: 100;
-            width: 280px;
-            border: 1px solid #ddd;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        /* Floating Control Widget */
+        .control-widget {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 340px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 15px;
+            color: white;
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             pointer-events: auto;
             font-size: 12px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
-        .control-panel h3 {
-            margin: 0 0 3px 0;
+        .control-widget::-webkit-scrollbar { width: 6px; }
+        .control-widget::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        .control-widget::-webkit-scrollbar-thumb { background: #2c7ed6; border-radius: 3px; }
+        
+        .widget-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .widget-header h3 {
             font-size: 14px;
-            color: #2c7ed6;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .control-panel p {
-            margin: 0 0 8px 0;
-            font-size: 10px;
-            opacity: 0.6;
-        }
-        
-        .file-input-area {
-            background: #f5f5f5;
-            border: 1.5px dashed #2c7ed6;
-            border-radius: 8px;
-            padding: 6px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 8px;
-        }
-        
-        .file-input-area:hover {
-            background: #e8f0fe;
-        }
-        
-        #fileInput {
-            display: none;
-        }
-        
-        .upload-label {
-            cursor: pointer;
-            display: inline-block;
-            padding: 4px 10px;
-            background: #2c7ed6;
-            border-radius: 5px;
-            font-size: 10px;
-            font-weight: bold;
-            color: white;
-        }
-        
-        .sensor-display {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 6px 8px;
-            margin: 6px 0;
-            font-family: 'Monaco', monospace;
-            font-size: 10px;
-            border: 1px solid #e0e0e0;
-        }
-        
-        .sensor-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 2px 0;
-        }
-        
-        .axis-x { color: #ff4444; font-weight: bold; }
-        .axis-y { color: #44ff44; font-weight: bold; }
-        .axis-z { color: #4444ff; font-weight: bold; }
-        
-        .direction-badge {
-            background: #f0f0f0;
-            padding: 5px 8px;
-            border-radius: 6px;
-            margin: 6px 0;
-            text-align: center;
-            font-weight: bold;
-            font-size: 11px;
-            border-left: 3px solid #FFD700;
-        }
-        
-        .default-orientation {
-            background: #e8f4fd;
-            padding: 4px 6px;
-            border-radius: 5px;
-            margin: 5px 0;
-            font-size: 9px;
-            text-align: center;
-            color: #2c7ed6;
-        }
-        
-        .speed-control, .sensitivity-control {
-            margin: 6px 0;
-        }
-        
-        .speed-control label, .sensitivity-control label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 3px;
-            font-size: 9px;
-        }
-        
-        input[type="range"] {
-            width: 100%;
-            cursor: pointer;
-            background: #e0e0e0;
-            height: 3px;
-            border-radius: 2px;
-            -webkit-appearance: none;
-        }
-        
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #2c7ed6;
-            cursor: pointer;
-        }
-        
-        .timeline-container {
-            margin: 10px 0 8px 0;
-        }
-        
-        .timeline-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 9px;
-            margin-bottom: 4px;
-            color: #666;
-        }
-        
-        #timelineSlider {
-            width: 100%;
-            height: 4px;
-            background: #ddd;
-            border-radius: 2px;
-        }
-        
-        #timelineSlider::-webkit-slider-thumb {
-            width: 14px;
-            height: 14px;
-            background: #2c7ed6;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-        
-        .trail-toggle {
-            margin: 5px 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 10px;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 5px;
-            margin-top: 8px;
-        }
-        
-        button {
-            flex: 1;
-            padding: 5px 6px;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-            background: #e8e8e8;
-            color: #333;
-            font-size: 10px;
-        }
-        
-        button.primary {
-            background: #2c7ed6;
-            color: white;
-        }
-        
-        button.primary:hover {
-            background: #1a6bbf;
-        }
-        
-        button:hover {
-            background: #d0d0d0;
-        }
-        
-        .status {
-            font-size: 9px;
-            margin-top: 6px;
-            padding: 4px;
-            border-radius: 5px;
-            background: #f0f0f0;
-            text-align: center;
-            color: #555;
-        }
-        
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 2px;
-            background: #e0e0e0;
-            border-radius: 1px;
-            margin: 6px 0;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: #2c7ed6;
-            width: 0%;
-            transition: width 0.05s linear;
-        }
-        
-        .frame-counter {
-            text-align: center;
-            font-size: 9px;
-            margin-top: 4px;
-            color: #666;
+            color: #88ccff;
+            margin: 0;
         }
         
         .device-badge {
@@ -259,92 +70,378 @@
             padding: 2px 8px;
             border-radius: 10px;
             font-size: 8px;
+        }
+        
+        .file-input-area {
+            background: rgba(30, 40, 60, 0.8);
+            border: 1.5px dashed #4a9eff;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+        
+        .file-input-area:hover {
+            background: rgba(50, 70, 100, 0.8);
+            border-color: #88ccff;
+        }
+        
+        .upload-label {
+            cursor: pointer;
             display: inline-block;
-            margin-left: 5px;
+            padding: 6px 16px;
+            background: #2c7ed6;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        #fileInput { display: none; }
+        
+        /* Resultant Graph */
+        .graph-container {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .graph-title {
+            font-size: 10px;
+            margin-bottom: 8px;
+            color: #ffaa44;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .graph-canvas {
+            width: 100%;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+        }
+        
+        .graph-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 8px;
+            color: #aaa;
+        }
+        
+        /* Permanent Color Legend */
+        .color-legend {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            padding: 8px;
+            margin: 8px 0;
+            font-size: 9px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: space-between;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1px solid white;
+        }
+        
+        .legend-dot.lightgreen { background-color: #90EE90; }
+        .legend-dot.lightorange { background-color: #FFA500; }
+        .legend-dot.darkred { background-color: #8B0000; }
+        .legend-dot.floblue { background-color: #00BFFF; }
+        .legend-dot.black { background-color: #000000; }
+        
+        .direction-badge {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 6px 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 11px;
+            margin: 8px 0;
+            border-left: 3px solid #FFD700;
+        }
+        
+        .timeline-container { margin: 10px 0; }
+        .timeline-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+        #timelineSlider {
+            width: 100%;
+            cursor: pointer;
+            height: 4px;
+            border-radius: 2px;
+        }
+        
+        .speed-control, .sensitivity-control { margin: 8px 0; }
+        .speed-control label, .sensitivity-control label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 10px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            background: #333;
+            height: 3px;
+            border-radius: 2px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #2c7ed6;
+            cursor: pointer;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        button {
+            flex: 1;
+            padding: 6px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #2c3e50;
+            color: white;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+        
+        button.primary { background: #2c7ed6; }
+        button.primary:hover { background: #1a6bbf; }
+        button:hover { background: #3e5a6f; }
+        
+        .status {
+            font-size: 10px;
+            margin-top: 8px;
+            padding: 6px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        
+        .status.success {
+            background: rgba(40, 167, 69, 0.3);
+            color: #90ff90;
+        }
+        
+        .status.error {
+            background: rgba(220, 53, 69, 0.3);
+            color: #ff9090;
+        }
+        
+        .frame-counter {
+            text-align: center;
+            font-size: 10px;
+            margin-top: 6px;
+            color: #aaa;
+        }
+        
+        /* 3D Device Container */
+        .device-3d-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 320px;
+            height: 320px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            overflow: hidden;
+            pointer-events: auto;
+        }
+        
+        .device-3d-container .title {
+            position: absolute;
+            top: 8px;
+            left: 12px;
+            font-size: 10px;
+            color: #333;
+            font-weight: bold;
+            z-index: 10;
+            background: rgba(255,255,255,0.9);
+            padding: 2px 10px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        #deviceCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        /* Map marker styles */
+        .marker-lightgreen {
+            background-color: #90EE90;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        
+        .marker-lightorange {
+            background-color: #FFA500;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 8px rgba(255,165,0,0.5);
+            animation: pulse-orange 1s infinite;
+        }
+        
+        .marker-darkred {
+            background-color: #8B0000;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(139,0,0,0.6);
+            animation: pulse-red 1s infinite;
+        }
+        
+        .marker-black {
+            background-color: #000000;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 14px rgba(0,0,0,0.8);
+            animation: pulse-black 1s infinite;
+        }
+        
+        .marker-floblue {
+            background-color: #00BFFF;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 12px rgba(0,191,255,0.7);
+            animation: pulse-blue 1s infinite;
+        }
+        
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.8; }
+        }
+        
+        @keyframes pulse-orange {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.8; }
+        }
+        
+        @keyframes pulse-black {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.7; }
+        }
+        
+        @keyframes pulse-blue {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.35); opacity: 0.8; }
+        }
+        
+        @media (max-width: 768px) {
+            .control-widget { width: 300px; right: 10px; top: 10px; padding: 10px; max-height: 85vh; }
+            .device-3d-container { width: 200px; height: 200px; bottom: 10px; left: 10px; }
         }
     </style>
 </head>
 <body>
-    <div class="control-panel">
-        <h3>
-              BeeSense Flex 
-            <span class="device-badge">On Floor Surface</span>
-        </h3>
-        <p>Upload CSV/Excel with X, Y, Z columns</p>
+    <div id="map"></div>
+    
+    <!-- 3D Device View -->
+    <div class="device-3d-container">
+        <div class="title" id="deviceOrientationTitle">Device Orientation | <span id="currentAxisLabel">+Z</span></div>
+        <canvas id="deviceCanvas" width="500" height="500"></canvas>
+    </div>
+    
+    <!-- Control Widget -->
+    <div class="control-widget">
+        <div class="widget-header">
+            <h3>BeeSense Flex</h3>
+            <span class="device-badge" id="beeNameBadge">Vibration Viewer</span>
+        </div>
+        <p style="font-size: 10px; opacity: 0.7; margin-bottom: 10px;">Upload CSV with 'msg' column containing JSON data</p>
         
         <div class="file-input-area" id="fileDropZone">
-            <div class="upload-label" id="uploadBtn">📂 Choose File</div>
-            <div style="font-size: 8px; margin-top: 3px;">.csv, .xlsx, .xls</div>
+            <div class="upload-label" id="uploadBtn">📂 Choose CSV/Excel</div>
+            <div style="font-size: 9px; margin-top: 5px;">.csv, .xlsx, .xls</div>
         </div>
-        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.xlsm">
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
         
-        <div class="default-orientation" id="defaultOrientation">
-            📍 Device resting on floor | ROAMBEE logo facing SKY (+Z)
-        </div>
-        
-        <div class="sensor-display">
-            <div class="sensor-row">
-                <span>🎯 Resultant:</span>
-                <span id="resultantVal" style="color:#ff8800; font-weight: bold;">0</span>
-            </div>
-            <div class="sensor-row">
-                <span class="axis-x">X:</span>
-                <span id="valX" class="axis-x">0</span>
-                <span class="axis-y" style="margin-left: 12px;">Y:</span>
-                <span id="valY" class="axis-y">0</span>
-                <span class="axis-z" style="margin-left: 12px;">Z:</span>
-                <span id="valZ" class="axis-z">0</span>
+        <!-- Resultant Graph -->
+        <div class="graph-container" id="graphContainer" style="display: none;">
+            <div class="graph-title">📊 Resultant Force Curve (G)</div>
+            <canvas id="resultantCanvas" class="graph-canvas" width="400" height="60" style="width:100%; height:60px"></canvas>
+            <div class="graph-stats">
+                <span>📈 Max: <span id="graphMax">0</span>G</span>
+                <span>📉 Avg: <span id="graphAvg">0</span>G</span>
             </div>
         </div>
         
-        <div class="direction-badge" id="directionBadge">
-            🧭 +Z Direction - ROAMBEE logo facing SKY (Default)
+        <!-- Permanent Color Legend -->
+        <div class="color-legend">
+            <div class="legend-item"><div class="legend-dot lightgreen"></div><span>Stable</span></div>
+            <div class="legend-item"><div class="legend-dot lightorange"></div><span>Orientation Change</span></div>
+            <div class="legend-item"><div class="legend-dot darkred"></div><span>Strong Impact</span></div>
+            <div class="legend-item"><div class="legend-dot floblue"></div><span>Both (Impact+Orientation)</span></div>
+            <div class="legend-item"><div class="legend-dot black"></div><span>Maximum Impact</span></div>
         </div>
         
+        <!-- Frame counter explicitly added to fix the null reference error -->
+                
         <div class="timeline-container">
             <div class="timeline-label">
-                <span>⏪ Timeline Scrubber</span>
-                <span id="timelineFrameInfo">Frame 0/0</span>
+                <span>⏪ Timeline</span>
+                <span id="timelineFrameInfo">Msg 0/0</span>
             </div>
             <input type="range" id="timelineSlider" min="0" max="100" value="0" step="1">
         </div>
         
         <div class="speed-control">
-            <label>
-                <span>🐢 Speed</span>
-                <span id="speedValue">Normal</span>
-            </label>
-            <input type="range" id="speedSlider" min="50" max="300" value="120" step="10">
+            <label><span>Animation Speed</span><span id="speedValue">Very Slow</span></label>
+            <input type="range" id="speedSlider" min="200" max="1000" value="400" step="50">
         </div>
         
-        <div class="sensitivity-control">
-            <label>
-                <span>📊 Sensitivity</span>
-                <span id="sensitivityValue">2.5x</span>
-            </label>
-            <input type="range" id="sensitivitySlider" min="1" max="5" value="2.5" step="0.1">
-        </div>
-        
-        <div class="trail-toggle">
-            <input type="checkbox" id="trailToggle">
-            <label for="trailToggle">✨ Show movement trail</label>
-        </div>
-        
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
-        </div>
-        
-        <div class="frame-counter" id="frameCounter">Frame: 0 / 0</div>
-        
+               
         <div class="button-group">
             <button id="playBtn" class="primary">▶ Play</button>
             <button id="pauseBtn">⏸ Pause</button>
-            <button id="resetBtn">⟳ Reset to Start</button>
-            <button id="resetTrailBtn">🗑️ Trail</button>
+            <button id="resetBtn">⟳ Reset</button>
+            <button id="fitBoundsBtn">🗺️ Fit Route</button>
         </div>
         
         <div class="status" id="statusMsg">
-            📁 Click to upload vibration data
+            📁 Upload log file to start
         </div>
     </div>
 
@@ -361,638 +458,506 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
         import * as XLSX from 'xlsx';
         
+        // Data structures
         let sensorData = [];
         let currentFrame = 0;
         let isPlaying = false;
         let animationInterval = null;
-        let frameInterval = 120;
-        let movementSensitivity = 2.5;
-        let trailPositions = [];
-        let trailPoints = null;
-        let showTrail = false;
-        let isScrubbing = false;
-        let fileProcessed = false;
+        let frameInterval = 400;
+        // let movementSensitivity = 2.5; // kept for future use
+        let map = null;
+        let marker = null;
+        let allMarkers = [];
+        let polyline = null;
+        let trailLine = null;
+        let currentBeeName = "BSF3951304";
+        
+        // Chart variables
+        let resultantChart = null;
+        let resultantData = [];
+        
+        // Three.js variables
+        let scene, camera, renderer, deviceGroup, ledMat;
+        let controls3d;
+        
+        const deviceCanvas = document.getElementById('deviceCanvas');
+        
+        // DOM element references with safe checks
+        // const frameCounterElement = document.getElementById('frameCounter');
+        const timelineFrameInfo = document.getElementById('timelineFrameInfo');
+        const timelineSlider = document.getElementById('timelineSlider');
+        const currentAxisLabelSpan = document.getElementById('currentAxisLabel');
+        const graphMaxSpan = document.getElementById('graphMax');
+        const graphAvgSpan = document.getElementById('graphAvg');
+        const beeNameBadge = document.getElementById('beeNameBadge');
+        const statusMsgDiv = document.getElementById('statusMsg');
+        const graphContainer = document.getElementById('graphContainer');
+        const speedValueSpan = document.getElementById('speedValue');
+        
+        function calculateResultant(x, y, z) {
+            return Math.sqrt(x*x + y*y + z*z);
+        }
         
         function getDominantAxis(x, y, z) {
             const absX = Math.abs(x);
             const absY = Math.abs(y);
             const absZ = Math.abs(z);
             
-            if (absX >= absY && absX >= absZ) {
-                return x >= 0 ? '+X' : '-X';
-            } else if (absY >= absX && absY >= absZ) {
-                return y >= 0 ? '+Y' : '-Y';
-            } else {
-                return z >= 0 ? '+Z' : '-Z';
+            if (absX >= absY && absX >= absZ) return x >= 0 ? '+X' : '-X';
+            else if (absY >= absX && absY >= absZ) return y >= 0 ? '+Y' : '-Y';
+            else return z >= 0 ? '+Z' : '-Z';
+        }
+        
+        function getShortAxisName(axis) {
+            return axis;
+        }
+        
+        function setDeviceOrientation(dominantAxis) {
+            if (!deviceGroup) return;
+            
+            switch(dominantAxis) {
+                case '+Z':
+                    deviceGroup.rotation.set(-Math.PI / 2, 0, 0);
+                    break;
+                case '-Z':
+                    deviceGroup.rotation.set(Math.PI / 2, 0, 0);
+                    break;
+                case '+X':
+                    deviceGroup.rotation.set(-Math.PI / 2, -Math.PI / 2, 0);
+                    break;    
+                case '-X':
+                    deviceGroup.rotation.set(-Math.PI / 2, Math.PI / 2, 0);
+                    break;    
+                case '+Y':
+                    deviceGroup.rotation.set(0, 0, 0);
+                    break;
+                case '-Y':
+                    deviceGroup.rotation.set(0, 0, Math.PI);
+                    break;
+                default:
+                    deviceGroup.rotation.set(0, 0, 0);
+            }
+            
+            let arrowDir = new THREE.Vector3(0, 0, 0);
+            let arrowColor = 0xffaa44;
+            switch(dominantAxis) {
+                case '+X': arrowDir.set(1, 0, 0); arrowColor = 0xcc3333; break;
+                case '-X': arrowDir.set(-1, 0, 0); arrowColor = 0xcc3333; break;
+                case '+Y': arrowDir.set(0, 1, 0); arrowColor = 0x33cc33; break;
+                case '-Y': arrowDir.set(0, -1, 0); arrowColor = 0x33cc33; break;
+                case '+Z': arrowDir.set(0, 0, 1); arrowColor = 0x3333cc; break;
+                case '-Z': arrowDir.set(0, 0, -1); arrowColor = 0x3333cc; break;
+            }
+            if (deviceGroup.userData && deviceGroup.userData.arrowHelper) {
+                deviceGroup.userData.arrowHelper.setDirection(arrowDir.clone().normalize());
+                deviceGroup.userData.arrowHelper.setColor(arrowColor);
             }
         }
         
-        function getDirectionName(axis) {
-         const names = {
-        '+X': "+X - Flat rotated LEFT",
-        '-X': "-X - Flat rotated RIGHT",
-        '+Y': "+Y - Vertical upright",
-        '-Y': "-Y - Vertical upside down",
-        '+Z': "+Z - Flat, logo facing SKY",
-        '-Z': "-Z - Flat upside down"
-    };
-
-    return names[axis] || "Unknown";
-}
-        
-        function getDirectionIcon(axis) {
-            const icons = { '-X': "➡️", '+X': "⬅️", '-Y': "🔄⬆️", '+Y': "⬆️", '+Z': "☁️⬆️", '-Z': "🔌⬆️" };
-            return icons[axis] || "🎯";
+        function initMap() {
+            map = L.map('map').setView([20, 0], 2);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB',
+                subdomains: 'abcd',
+                maxZoom: 19,
+                minZoom: 2
+            }).addTo(map);
         }
         
-        function calculateResultant(x, y, z) {
-            return Math.sqrt(x*x + y*y + z*z).toFixed(1);
-        }
-        
-        // Setup scene
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xe8eaed);
-        
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(4, 4.5, 5.5);
-        camera.lookAt(0, 0, 0);
-        
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        document.body.appendChild(renderer.domElement);
-        
-        const labelRenderer = new CSS2DRenderer();
-        labelRenderer.setSize(window.innerWidth, window.innerHeight);
-        labelRenderer.domElement.style.position = 'absolute';
-        labelRenderer.domElement.style.top = '0px';
-        labelRenderer.domElement.style.left = '0px';
-        labelRenderer.domElement.style.pointerEvents = 'none';
-        document.body.appendChild(labelRenderer.domElement);
-        
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.autoRotate = false;
-        controls.enableZoom = true;
-        controls.target.set(0, 0.5, 0);
-        
-        // ========== FLOOR / SURFACE ==========
-        // Floor plane with grid and material
-        const floorMat = new THREE.MeshStandardMaterial({
-                color: 0x7c7c7c,
-                roughness: 0.95,
-                metalness: 0.02
-            });
-        const floorPlane = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), floorMat);
-        floorPlane.rotation.x = -Math.PI / 2;
-        floorPlane.position.y = -0.7;
-        floorPlane.receiveShadow = true;
-        scene.add(floorPlane);
-        
-        // Floor grid helper
-        const floorGrid = new THREE.GridHelper(8, 20, 0x8899aa, 0xaabbcc);
-        floorGrid.position.y = -0.69;
-        floorGrid.material.transparent = true;
-        floorGrid.material.opacity = 0.5;
-        scene.add(floorGrid);
-        
-        // Add a subtle circular shadow catcher
-        const shadowMat = new THREE.MeshStandardMaterial({ color: 0x000000, transparent: true, opacity: 0.32 });
-        const shadowDisk = new THREE.Mesh(new THREE.CircleGeometry(1.6, 32), shadowMat);
-        shadowDisk.rotation.x = -Math.PI / 2;
-        shadowDisk.position.y = -0.68;
-        shadowDisk.receiveShadow = true;
-        scene.add(shadowDisk);
-        
-        // Device group
-        const deviceGroup = new THREE.Group();
-        scene.add(deviceGroup);
-        
-        // Bright Yellow color
-        const brightYellow = 0xFFD700;
-        
-        // Dimensions: ROAMBEE face is larger (130mm x 80mm), thickness 27mm
-        const scale = 1.2;
-        const widthX = 0.8 * scale;   // X-axis (80mm)
-        const heightY = 1.3 * scale;  // Y-axis (130mm)
-        const depthZ = 0.27 * scale;  // Z-axis (27mm thickness)
-        
-        const bodyGeo = new THREE.BoxGeometry(widthX, heightY, depthZ);
-        const bodyMat = new THREE.MeshStandardMaterial({ color: brightYellow, roughness: 0.3, metalness: 0.05 });
-        const mainBody = new THREE.Mesh(bodyGeo, bodyMat);
-        mainBody.castShadow = true;
-        mainBody.receiveShadow = true;
-        deviceGroup.add(mainBody);
-        
-        // Add edge highlights
-        const edgesGeo = new THREE.EdgesGeometry(bodyGeo);
-        const edgesMat = new THREE.LineBasicMaterial({ color: 0xCCA800 });
-        const wireframe = new THREE.LineSegments(edgesGeo, edgesMat);
-        deviceGroup.add(wireframe);
-        
-        // FRONT FACE (+Z direction) - ROAMBEE logo (larger face)
-        const frontCanvas = document.createElement('canvas');
-        frontCanvas.width = 1024;
-        frontCanvas.height = 1024;
-        const frontCtx = frontCanvas.getContext('2d');
-        frontCtx.fillStyle = '#FFD700';
-        frontCtx.fillRect(0, 0, frontCanvas.width, frontCanvas.height);
-        
-        // Black bold ROAMBEE text
-        frontCtx.fillStyle = '#000000';
-        frontCtx.font = 'Bold 80px "Arial Black", "Segoe UI Black", sans-serif';
-        frontCtx.textAlign = 'center';
-        frontCtx.fillText("roambee", frontCanvas.width/2, frontCanvas.height/2 - 60);
-        
-        // Serial number
-        frontCtx.font = '22px "Courier New", monospace';
-        frontCtx.fillStyle = '#333333';
-        frontCtx.fillText("869487061831284", frontCanvas.width/2, frontCanvas.height/2);
-        
-        // READY FOR USE
-        frontCtx.font = 'Bold 32px "Segoe UI", Arial';
-        frontCtx.fillStyle = '#000000';
-        frontCtx.fillText("READY FOR USE", frontCanvas.width/2, frontCanvas.height/2 + 60);
-        
-        // LISTO PARA USAR
-        frontCtx.font = '26px "Segoe UI", Arial';
-        frontCtx.fillStyle = '#555555';
-        frontCtx.fillText("LISTO PARA USAR", frontCanvas.width/2, frontCanvas.height/2 + 110);
-        
-        // STATUS / 即用型
-        frontCtx.font = '22px "Segoe UI", Arial';
-        frontCtx.fillStyle = '#666666';
-        frontCtx.fillText("STATUS  即用型", frontCanvas.width/2, frontCanvas.height/2 + 160);
-        
-        // Small circular button
-        frontCtx.fillStyle = '#333333';
-        frontCtx.beginPath();
-        frontCtx.arc(frontCanvas.width/2, frontCanvas.height/2 + 220, 20, 0, 2 * Math.PI);
-        frontCtx.fill();
-        frontCtx.fillStyle = '#666666';
-        frontCtx.beginPath();
-        frontCtx.arc(frontCanvas.width/2, frontCanvas.height/2 + 220, 14, 0, 2 * Math.PI);
-        frontCtx.fill();
-        
-        const frontTexture = new THREE.CanvasTexture(frontCanvas);
-        
-        // BACK FACE (-Z direction) - USB-C and model info
-        const backCanvas = document.createElement('canvas');
-        backCanvas.width = 1024;
-        backCanvas.height = 1024;
-        const backCtx = backCanvas.getContext('2d');
-        backCtx.fillStyle = '#FFD700';
-        backCtx.fillRect(0, 0, backCanvas.width, backCanvas.height);
-        
-        // USB-C port
-        backCtx.fillStyle = '#222222';
-        backCtx.fillRect(backCanvas.width/2 - 70, backCanvas.height/2 - 60, 140, 70);
-        backCtx.fillStyle = '#888888';
-        backCtx.fillRect(backCanvas.width/2 - 50, backCanvas.height/2 - 45, 100, 40);
-        backCtx.fillStyle = '#444444';
-        backCtx.fillRect(backCanvas.width/2 - 35, backCanvas.height/2 - 35, 70, 25);
-        backCtx.fillStyle = '#ffffff';
-        backCtx.font = '28px "Segoe UI", Arial';
-        backCtx.fillText("USB-C", backCanvas.width/2, backCanvas.height/2 + 20);
-        
-        // Model info
-        backCtx.fillStyle = '#000000';
-        backCtx.font = 'Bold 32px "Segoe UI", Arial';
-        backCtx.fillText("Model: BNG500", backCanvas.width/2, backCanvas.height/2 + 90);
-        
-        // Certifications
-        backCtx.font = '20px "Segoe UI", Arial';
-        backCtx.fillStyle = '#333333';
-        backCtx.fillText("CE FC • RoHS", backCanvas.width/2, backCanvas.height/2 + 150);
-        backCtx.fillText("MADE IN CHINA", backCanvas.width/2, backCanvas.height/2 + 190);
-        
-        const backTexture = new THREE.CanvasTexture(backCanvas);
-        
-        // Other sides are plain yellow
-        const plainYellowMat = new THREE.MeshStandardMaterial({ color: brightYellow, roughness: 0.3, metalness: 0.05 });
-        
-        // Materials order: right (+X), left (-X), up (+Y), down (-Y), front (+Z), back (-Z)
-        const materials = [
-            plainYellowMat,      // right side - plain
-            plainYellowMat,      // left side - plain
-            plainYellowMat,      // top side - plain
-            plainYellowMat,      // bottom side - plain
-            new THREE.MeshStandardMaterial({ map: frontTexture, color: brightYellow }), // front (+Z) - ROAMBEE
-            new THREE.MeshStandardMaterial({ map: backTexture, color: brightYellow })   // back (-Z) - USB-C
-        ];
-        
-        const texturedBody = new THREE.Mesh(bodyGeo, materials);
-        texturedBody.castShadow = true;
-        texturedBody.receiveShadow = true;
-        deviceGroup.add(texturedBody);
-        // Make device lie flat on floor by default
-        // texturedBody.rotation.x = Math.PI / 2;
-        // wireframe.rotation.x = Math.PI / 2;
-        // button.rotation.x = Math.PI / 2;
-        scene.add(deviceGroup);
-
-          
-        // LED indicator
-        const ledMat = new THREE.MeshStandardMaterial({
-            color: 0x111111,
-            emissive: 0x00ff66,
-            emissiveIntensity: 0.2
-        });
-
-        const ledLight = new THREE.Mesh(
-            new THREE.SphereGeometry(0.08, 16, 16),
-            ledMat
-        );
-
-        ledLight.position.set(0.4, 0.15, -0.65);
-        deviceGroup.add(ledLight);
-        
-        
-        // 3D button on front face
-        const buttonMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.3 });
-        const button = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.05, 16), buttonMat);
-        button.position.set(0, -0.5, 0.16);
-        deviceGroup.add(button);
-        
-        // Store original state
-        let originalPosition = { x: 0, y: 0, z: 0 };
-        
-        // ORIENTATION FUNCTION - Device resting on floor
-
-const floorY = -0.7;
-const restingY = floorY + depthZ / 2;
-
-// function setDeviceOrientation(dominantAxis) {
-
-//     // Reset rotation every frame
-//     deviceGroup.rotation.set(0, 0, 0);
-
-//     switch(dominantAxis) {
-
-//         case '+Z':
-//             // Flat on floor - logo facing UP
-//             deviceGroup.rotation.x = -Math.PI / 2;
-//             break;
-
-//         case '-Z':
-//             // Flat upside down
-//             deviceGroup.rotation.x = Math.PI / 2;
-//             break;
-
-//         case '+X':
-//             // Left edge down
-//             deviceGroup.rotation.z = -Math.PI / 2;
-//             break;
-
-//         case '-X':
-//             // Right edge down
-//             deviceGroup.rotation.z = Math.PI / 2;
-//             break;
-
-//         case '+Y':
-//             // Standing upright
-//             deviceGroup.rotation.x = 0;
-//             break;
-
-//         case '-Y':
-//             // Upside down vertical
-//             deviceGroup.rotation.z = Math.PI;
-//             break;
-//     }
-// }
-// function setDeviceOrientation(dominantAxis) {
-
-//     // Reset
-//     deviceGroup.rotation.set(0, 0, 0);
-
-//     switch(dominantAxis) {
-
-//         case '+Z':
-//             // Flat on table
-//             deviceGroup.rotation.x = -Math.PI / 2;
-//             break;
-
-//         case '-Z':
-//             // Flat upside down
-//             deviceGroup.rotation.x = Math.PI / 2;
-//             break;
-
-//         // case '+X':
-//         //     // Tilt LEFT like your image
-//         //     deviceGroup.rotation.x = -Math.PI / 2;
-//         //     deviceGroup.rotation.z = -Math.PI / 2;
-//         //     break;
-
-//         // case '-X':
-//         //     // Tilt RIGHT like your image
-//         //     deviceGroup.rotation.x = -Math.PI / 2;
-//         //     deviceGroup.rotation.z = Math.PI / 2;
-//             case '+X':
-//             // Tilt LEFT
-//             deviceGroup.rotation.z = -Math.PI / 2;
-//             break;
-
-//         case '-X':
-//             // Tilt RIGHT
-//             deviceGroup.rotation.z = Math.PI / 2;
-//             break;
-//             break;
-
-//         case '+Y':
-//             // Vertical upright
-//             deviceGroup.rotation.x = 0;
-//             break;
-
-//         case '-Y':
-//             // Vertical opposite
-//             deviceGroup.rotation.x = Math.PI;
-//             break;
-//     }
-// }
-function setDeviceOrientation(dominantAxis) {
-
-    switch(dominantAxis) {
-
-        case '+Z':
-            // Flat on floor
-            deviceGroup.rotation.set(-Math.PI / 2, 0, 0);
-            break;
-
-        case '-Z':
-    // Flat upside down (USB side facing SKY)
-    deviceGroup.rotation.set(Math.PI / 2, 0, 0);
-    break;
-        // case '+X':
-        //     // Stand upright, face LEFT
-        //     deviceGroup.rotation.set(0, Math.PI / 2, 0);
-        //     break;
-        case '+X':
-            // Flat rotated LEFT
-            deviceGroup.rotation.set(
-                -Math.PI / 2,   // keep flat
-                -Math.PI / 2,   // rotate toward -Y
-                0
-            );
-            break;    
-
-        // case '-X':
-        //     // Stand upright, face RIGHT
-        //     deviceGroup.rotation.set(0, -Math.PI / 2, 0);
-        //     break;
-        case '-X':
-            // Flat rotated RIGHT
-            deviceGroup.rotation.set(
-                -Math.PI / 2,
-                Math.PI / 2,
-                0
-            );
-            break;    
-
-        case '+Y':
-            // Upright front
-            deviceGroup.rotation.set(0, 0, 0);
-            break;
-
-        // case '-Y':
-        //     // Upright backside
-        //     deviceGroup.rotation.set(0, Math.PI, 0);
-        //     break;
-        case '-Y':
-            // Vertical, rotated 180° left
-            // ROAMBEE becomes upside down
-            deviceGroup.rotation.set(
-                0,
-                0,
-                Math.PI
-            );
-            break;
-
-    }
-
-}
-        
-        // World axes helper
-        function createWorldAxes() {
-            const xPoints = [new THREE.Vector3(-5, -0.5, 0), new THREE.Vector3(5, -0.5, 0)];
-            const xLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(xPoints), new THREE.LineBasicMaterial({ color: 0xff3333 }));
-            scene.add(xLine);
-            const xArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(4.5, -0.5, 0), 0.6, 0xff6666, 0.4, 0.2);
-            scene.add(xArrow);
+        function drawResultantGraph() {
+            if (!resultantChart || resultantData.length === 0) return;
             
-            const yPoints = [new THREE.Vector3(0, -0.5, 0), new THREE.Vector3(0, 3.5, 0)];
-            const yLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(yPoints), new THREE.LineBasicMaterial({ color: 0x33ff33 }));
-            scene.add(yLine);
-            const yArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 3.2, 0), 0.6, 0x66ff66, 0.4, 0.2);
-            scene.add(yArrow);
+            const canvas = resultantChart;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            canvas.width = w;
+            canvas.height = h;
             
-            const zPoints = [new THREE.Vector3(0, -0.5, -4), new THREE.Vector3(0, -0.5, 4)];
-            const zLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(zPoints), new THREE.LineBasicMaterial({ color: 0x3399ff }));
-            scene.add(zLine);
-            const zArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, -0.5, 3.6), 0.6, 0x6699ff, 0.4, 0.2);
-            scene.add(zArrow);
-        }
-        
-        function addWorldLabels() {
-            const makeLabel = (text, color, position) => {
-                const div = document.createElement('div');
-                div.textContent = text;
-                div.style.color = color;
-                div.style.fontSize = '14px';
-                div.style.fontWeight = 'bold';
-                div.style.background = 'rgba(255,255,255,0.9)';
-                div.style.padding = '2px 8px';
-                div.style.borderRadius = '20px';
-                div.style.border = `1px solid ${color}`;
-                const label = new CSS2DObject(div);
-                label.position.copy(position);
-                scene.add(label);
-            };
-            makeLabel('+X (Left)', '#ff8888', new THREE.Vector3(5.2, -0.8, 0));
-            makeLabel('-X (Right)', '#ff8888', new THREE.Vector3(-5.2, -0.8, 0));
-            // WORLD Y = physical UP/DOWN
-            makeLabel('+Z (Sky / Up)', '#8888ff', new THREE.Vector3(0, 4.2, 0));
-            makeLabel('-Z (Floor / Down)', '#8888ff', new THREE.Vector3(0, -1.2, 0));
-
-            // WORLD Z = front/back depth
-            makeLabel('+Y (Front)', '#88ff88', new THREE.Vector3(0, -0.8, 4.6));
-            makeLabel('-Y (Back)', '#88ff88', new THREE.Vector3(0, -0.8, -4.6));
+            ctx.clearRect(0, 0, w, h);
             
-        }
-        
-        createWorldAxes();
-        addWorldLabels();
-        
-        // Ambient and directional lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambientLight);
-        
-        const mainLight = new THREE.DirectionalLight(0xffffff, 1);
-        mainLight.position.set(3, 5, 2);
-        mainLight.castShadow = true;
-        mainLight.receiveShadow = false;
-        mainLight.shadow.mapSize.width = 1024;
-        mainLight.shadow.mapSize.height = 1024;
-        scene.add(mainLight);
-        
-        const fillLight = new THREE.PointLight(0x6688aa, 0.3);
-        fillLight.position.set(0, 2, 0);
-        scene.add(fillLight);
-        
-        const backLight = new THREE.PointLight(0xffaa66, 0.2);
-        backLight.position.set(-1, 1, -3);
-        scene.add(backLight);
-
-        const hemiLight = new THREE.HemisphereLight(
-                0xffffff,
-                0x555555,
-                0.7
-            );
-
-        scene.add(hemiLight);
-        
-        // Particles for ambiance
-        const particleCount = 400;
-        const particlesGeo = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        for (let i = 0; i < particleCount; i++) {
-            positions[i*3] = (Math.random() - 0.5) * 12;
-            positions[i*3+1] = (Math.random() - 0.5) * 4 + 1;
-            positions[i*3+2] = (Math.random() - 0.5) * 10;
-        }
-        particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        const particles = new THREE.Points(particlesGeo, new THREE.PointsMaterial({ color: 0x88aaff, size: 0.04, transparent: true, opacity: 0.2 }));
-        scene.add(particles);
-        
-        function resetToStart() {
-            pauseAnimation();
-            currentFrame = 0;
-            deviceGroup.position.set(0, restingY, 0);
-            if (sensorData.length > 0) {
-                updateVisualization(0);
+            if (resultantData.length === 0) return;
+            
+            const step = w / resultantData.length;
+            const maxVal = Math.max(...resultantData, 0.1);
+            const scale = h / maxVal;
+            
+            ctx.beginPath();
+            ctx.strokeStyle = '#ffaa44';
+            ctx.lineWidth = 1.5;
+            
+            for (let i = 0; i < resultantData.length; i++) {
+                const x = i * step;
+                const y = h - resultantData[i] * scale;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
             }
-            const timelineSlider = document.getElementById('timelineSlider');
-            if (timelineSlider) timelineSlider.value = 0;
-            document.getElementById('statusMsg').innerHTML = '🔄 Reset to frame 0';
+            ctx.stroke();
+            
+            if (currentFrame < resultantData.length) {
+                const markerX = currentFrame * step;
+                ctx.beginPath();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.moveTo(markerX, 0);
+                ctx.lineTo(markerX, h);
+                ctx.stroke();
+            }
         }
         
-        function updateTrail(position) {
-            if (!showTrail) return;
-            trailPositions.push(position.clone());
-            if (trailPositions.length > 100) trailPositions.shift();
-            if (trailPoints) scene.remove(trailPoints);
-            const points = trailPositions.map(p => new THREE.Vector3(p.x, p.y, p.z));
-            const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-            const lineMaterial = new THREE.LineBasicMaterial({
-                    color: 0x111111
-                });            
-            trailPoints = new THREE.Line(lineGeometry, lineMaterial);
-            scene.add(trailPoints);
-            if (window.trailSpheres) window.trailSpheres.forEach(s => scene.remove(s));
-            window.trailSpheres = [];
-            points.forEach((p, idx) => {
-                if (idx % 4 === 0) {
-                    const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshStandardMaterial({ color: 0x44aa88, emissive: 0x226644, emissiveIntensity: 0.2 }));
-                    sphere.position.copy(p);
-                    scene.add(sphere);
-                    window.trailSpheres.push(sphere);
+        function calculateStats() {
+            if (!sensorData.length) return { avg: 0, highThreshold: 0, maxResultant: 0 };
+            const resultants = sensorData.map(d => d.resultant);
+            const avg = resultants.reduce((a, b) => a + b, 0) / resultants.length;
+            const highThreshold = avg + 0.08;
+            const maxResultant = Math.max(...resultants);
+            return { avg, highThreshold, maxResultant };
+        }
+        
+        function getMarkerColor(resultant, isDirectionChange, isHighestResultant, stats) {
+            if (isHighestResultant) return 'marker-black';
+            if (resultant > stats.highThreshold && isDirectionChange) return 'marker-floblue';
+            if (resultant > stats.highThreshold) return 'marker-darkred';
+            if (isDirectionChange) return 'marker-lightorange';
+            return 'marker-lightgreen';
+        }
+        
+        function findDirectionChanges() {
+            const changes = new Set();
+            let lastAxis = null;
+            for (let i = 0; i < sensorData.length; i++) {
+                const currentAxis = getDominantAxis(sensorData[i].x, sensorData[i].y, sensorData[i].z);
+                if (lastAxis && lastAxis !== currentAxis) {
+                    changes.add(i);
                 }
+                lastAxis = currentAxis;
+            }
+            return changes;
+        }
+        
+        function addAllLocationMarkers() {
+            allMarkers.forEach(m => map.removeLayer(m));
+            allMarkers = [];
+            
+            const stats = calculateStats();
+            const directionChanges = findDirectionChanges();
+            const globalMaxResultant = stats.maxResultant;
+            
+            for (let i = 0; i < sensorData.length; i++) {
+                const data = sensorData[i];
+                if (!data.lat || !data.lng) continue;
+                
+                const isDirectionChange = directionChanges.has(i);
+                const isHighestResultant = (data.resultant === globalMaxResultant && globalMaxResultant > stats.highThreshold);
+                const markerClass = getMarkerColor(data.resultant, isDirectionChange, isHighestResultant, stats);
+                
+                const customIcon = L.divIcon({
+                    html: `<div class="${markerClass}"></div>`,
+                    iconSize: [14, 14],
+                    className: 'custom-marker'
+                });
+                
+                const markerPoint = L.marker([data.lat, data.lng], { icon: customIcon }).addTo(map);
+                markerPoint.frameIndex = i;
+                
+                let popupContent = `<b>📍 Msg ${i + 1}</b><br>`;
+                popupContent += `<b>Time:</b> ${data.datetime || 'N/A'}<br>`;
+                popupContent += `<b>Location:</b> ${data.lat.toFixed(6)}, ${data.lng.toFixed(6)}<br>`;
+                if (data.address) popupContent += `<b>Address:</b> ${data.address}<br>`;
+                popupContent += `<b>Resultant:</b> ${data.resultant.toFixed(2)} G<br>`;
+                popupContent += `<b>Orientation:</b> ${getShortAxisName(getDominantAxis(data.x, data.y, data.z))}<br>`;
+                
+                markerPoint.bindPopup(popupContent);
+                
+                markerPoint.on('click', () => {
+                    const frameData = sensorData[i];
+                    const frameAxis = getDominantAxis(frameData.x, frameData.y, frameData.z);
+                    setDeviceOrientation(frameAxis);
+                    updateLEDIntensity(frameData.resultant);
+                    if (currentAxisLabelSpan) currentAxisLabelSpan.textContent = getShortAxisName(frameAxis);
+                    updateFrameDisplay(i);
+                    if (timelineSlider) timelineSlider.value = i;
+                    currentFrame = i;
+                    drawResultantGraph();
+                });
+                
+                allMarkers.push(markerPoint);
+            }
+        }
+        
+        function drawRoute() {
+            if (!map || !sensorData.length) return;
+            if (polyline) map.removeLayer(polyline);
+            
+            const latlngs = sensorData.filter(d => d.lat && d.lng).map(d => [d.lat, d.lng]);
+            if (latlngs.length < 2) return;
+            
+            polyline = L.polyline(latlngs, { color: '#2c7ed6', weight: 3, opacity: 0.6 }).addTo(map);
+        }
+        
+        function updateTrailLine(index) {
+            if (!map || !sensorData.length) return;
+            
+            const points = [];
+            for (let i = 0; i <= index; i++) {
+                if (sensorData[i].lat && sensorData[i].lng) {
+                    points.push([sensorData[i].lat, sensorData[i].lng]);
+                }
+            }
+            
+            if (trailLine) map.removeLayer(trailLine);
+            if (points.length > 1) {
+                trailLine = L.polyline(points, { color: '#000000', weight: 4, opacity: 0.8 }).addTo(map);
+            }
+        }
+        
+        function updateMapLocation(index) {
+            if (!map || !sensorData.length || index >= sensorData.length) return;
+            
+            const data = sensorData[index];
+            if (!data.lat || !data.lng) return;
+            
+            if (marker) map.removeLayer(marker);
+            
+            const customIcon = L.divIcon({
+                html: `<div style="background-color: #2c7ed6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 15px rgba(44,126,214,0.8);"></div>`,
+                iconSize: [16, 16],
+                className: 'current-marker'
+            });
+            
+            marker = L.marker([data.lat, data.lng], { icon: customIcon }).addTo(map);
+            marker.bindPopup(`
+                <b>📍 CURRENT POSITION - Msg ${index + 1}</b><br>
+                <b>Time:</b> ${data.datetime || 'N/A'}<br>
+                <b>Location:</b> ${data.lat.toFixed(6)}, ${data.lng.toFixed(6)}<br>
+                ${data.address ? `<b>Address:</b> ${data.address}<br>` : ''}
+                <b>Resultant:</b> ${data.resultant.toFixed(2)} G<br>
+                <b>Orientation:</b> ${getShortAxisName(getDominantAxis(data.x, data.y, data.z))}
+            `).openPopup();
+            
+            map.panTo([data.lat, data.lng]);
+            updateTrailLine(index);
+        }
+        
+        function fitRouteBounds() {
+            if (!sensorData.length) return;
+            const latlngs = sensorData.filter(d => d.lat && d.lng).map(d => [d.lat, d.lng]);
+            if (latlngs.length) map.fitBounds(latlngs);
+        }
+        
+        function updateFrameDisplay(frameIndex) {
+            // if (frameCounterElement) {
+            //     frameCounterElement.textContent = `Frame: ${frameIndex + 1} / ${sensorData.length}`;
+            // }
+            if (timelineFrameInfo) {
+                timelineFrameInfo.textContent = `Msg ${frameIndex + 1}/${sensorData.length}`;
+            }
+            if (timelineSlider && sensorData.length) {
+                timelineSlider.max = sensorData.length - 1;
+                timelineSlider.value = frameIndex;
+            }
+        }
+        
+        function updateGraphStats() {
+            if (!sensorData.length) return;
+            const stats = calculateStats();
+            if (graphMaxSpan) graphMaxSpan.textContent = stats.maxResultant.toFixed(2);
+            if (graphAvgSpan) graphAvgSpan.textContent = stats.avg.toFixed(2);
+        }
+        
+        function init3D() {
+            const width = deviceCanvas.clientWidth;
+            const height = deviceCanvas.clientHeight;
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f5);
+            
+            camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+            camera.position.set(3.5, 3.2, 4.5);
+            camera.lookAt(0, 0, 0);
+            
+            renderer = new THREE.WebGLRenderer({ canvas: deviceCanvas, antialias: true });
+            renderer.setSize(width, height);
+            renderer.shadowMap.enabled = true;
+            
+            controls3d = new OrbitControls(camera, renderer.domElement);
+            controls3d.enableDamping = true;
+            controls3d.dampingFactor = 0.05;
+            controls3d.autoRotate = false;
+            controls3d.enableZoom = true;
+            controls3d.target.set(0, 0, 0);
+            
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x7c7c7c, roughness: 0.8, metalness: 0.1 });
+            const floorPlane = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), floorMat);
+            floorPlane.rotation.x = -Math.PI / 2;
+            floorPlane.position.y = -0.9;
+            floorPlane.receiveShadow = true;
+            scene.add(floorPlane);
+            
+            const shadowMat = new THREE.MeshStandardMaterial({ color: 0x000000, transparent: true, opacity: 0.3 });
+            const shadowDisk = new THREE.Mesh(new THREE.CircleGeometry(0.8, 16), shadowMat);
+            shadowDisk.rotation.x = -Math.PI / 2;
+            shadowDisk.position.y = -0.88;
+            shadowDisk.receiveShadow = true;
+            scene.add(shadowDisk);
+            
+            const gridHelper = new THREE.GridHelper(5, 20, 0x888888, 0xaaaaaa);
+            gridHelper.position.y = -0.85;
+            gridHelper.material.transparent = true;
+            gridHelper.material.opacity = 0.3;
+            scene.add(gridHelper);
+            
+            deviceGroup = new THREE.Group();
+            scene.add(deviceGroup);
+            
+            const deviceScale = 1.4;
+            const brightYellow = 0xFFD700;
+            const widthX = 0.8 * deviceScale;
+            const heightY = 1.3 * deviceScale;
+            const depthZ = 0.27 * deviceScale;
+            const bodyGeo = new THREE.BoxGeometry(widthX, heightY, depthZ);
+            
+            const frontCanvas = document.createElement('canvas');
+            frontCanvas.width = 512;
+            frontCanvas.height = 512;
+            const frontCtx = frontCanvas.getContext('2d');
+            frontCtx.fillStyle = '#FFD700';
+            frontCtx.fillRect(0, 0, frontCanvas.width, frontCanvas.height);
+            frontCtx.fillStyle = '#000000';
+            frontCtx.font = 'Bold 40px "Arial Black"';
+            frontCtx.textAlign = 'center';
+            frontCtx.fillText("roambee", frontCanvas.width/2, frontCanvas.height/2 - 50);
+            frontCtx.font = '18px "Segoe UI"';
+            frontCtx.fillText("READY FOR USE", frontCanvas.width/2, frontCanvas.height/2 + 10);
+            frontCtx.fillText("LISTO PARA USAR", frontCanvas.width/2, frontCanvas.height/2 + 40);
+            frontCtx.fillStyle = '#333333';
+            frontCtx.beginPath();
+            frontCtx.arc(frontCanvas.width/2, frontCanvas.height/2 + 90, 12, 0, 2 * Math.PI);
+            frontCtx.fill();
+            const frontTexture = new THREE.CanvasTexture(frontCanvas);
+            
+            const backCanvas = document.createElement('canvas');
+            backCanvas.width = 512;
+            backCanvas.height = 512;
+            const backCtx = backCanvas.getContext('2d');
+            backCtx.fillStyle = '#FFD700';
+            backCtx.fillRect(0, 0, backCanvas.width, backCanvas.height);
+            backCtx.fillStyle = '#222222';
+            backCtx.fillRect(backCanvas.width/2 - 45, backCanvas.height/2 - 30, 90, 45);
+            backCtx.fillStyle = '#888888';
+            backCtx.fillRect(backCanvas.width/2 - 30, backCanvas.height/2 - 20, 60, 25);
+            backCtx.fillStyle = '#ffffff';
+            backCtx.font = '18px "Segoe UI"';
+            backCtx.fillText("USB-C", backCanvas.width/2, backCanvas.height/2 + 10);
+            backCtx.fillStyle = '#000000';
+            backCtx.font = 'Bold 16px "Segoe UI"';
+            backCtx.fillText("Model: BNG500", backCanvas.width/2, backCanvas.height/2 + 50);
+            backCtx.font = '12px "Segoe UI"';
+            backCtx.fillText("CE FC • RoHS", backCanvas.width/2, backCanvas.height/2 + 80);
+            backCtx.fillText("MADE IN CHINA", backCanvas.width/2, backCanvas.height/2 + 100);
+            const backTexture = new THREE.CanvasTexture(backCanvas);
+            
+            const plainMat = new THREE.MeshStandardMaterial({ color: brightYellow });
+            const materials = [plainMat, plainMat, plainMat, plainMat, new THREE.MeshStandardMaterial({ map: frontTexture }), new THREE.MeshStandardMaterial({ map: backTexture })];
+            
+            const body = new THREE.Mesh(bodyGeo, materials);
+            body.castShadow = true;
+            body.receiveShadow = true;
+            deviceGroup.add(body);
+            
+            ledMat = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xff2200, emissiveIntensity: 0.3 });
+            const ledLight = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), ledMat);
+            ledLight.position.set(0.5, 0.65, 0.18);
+            deviceGroup.add(ledLight);
+            
+            const arrowHelper = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0.8, 0.3, 0), 0.9, 0xcc3333, 0.5, 0.3);
+            deviceGroup.add(arrowHelper);
+            deviceGroup.userData = { arrowHelper };
+            
+            // Axis lines
+            const xLineMat = new THREE.LineBasicMaterial({ color: 0xcc3333 });
+            const xPoints = [new THREE.Vector3(-2.2, 0, 0), new THREE.Vector3(2.2, 0, 0)];
+            const xLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(xPoints), xLineMat);
+            scene.add(xLine);
+            
+            const yLineMat = new THREE.LineBasicMaterial({ color: 0x33cc33 });
+            const yPoints = [new THREE.Vector3(0, -1.8, 0), new THREE.Vector3(0, 1.8, 0)];
+            const yLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(yPoints), yLineMat);
+            scene.add(yLine);
+            
+            const zLineMat = new THREE.LineBasicMaterial({ color: 0x3333cc });
+            const zPoints = [new THREE.Vector3(0, 0, -1.8), new THREE.Vector3(0, 0, 1.8)];
+            const zLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(zPoints), zLineMat);
+            scene.add(zLine);
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+            dirLight.position.set(2, 4, 2);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+            const fillLight = new THREE.PointLight(0x88aaff, 0.3);
+            fillLight.position.set(0, 1, 0);
+            scene.add(fillLight);
+            
+            function animate3D() {
+                requestAnimationFrame(animate3D);
+                controls3d.update();
+                renderer.render(scene, camera);
+            }
+            animate3D();
+            
+            window.addEventListener('resize', () => {
+                const newWidth = deviceCanvas.clientWidth;
+                const newHeight = deviceCanvas.clientHeight;
+                camera.aspect = newWidth / newHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(newWidth, newHeight);
             });
         }
         
-        function clearTrail() {
-            trailPositions = [];
-            if (trailPoints) { scene.remove(trailPoints); trailPoints = null; }
-            if (window.trailSpheres) { window.trailSpheres.forEach(s => scene.remove(s)); window.trailSpheres = []; }
+        function updateLEDIntensity(resultant) {
+            if (!ledMat) return;
+            const intensity = Math.min(1.2, resultant / 400);
+            ledMat.emissiveIntensity = 0.2 + intensity;
         }
         
         function updateVisualization(frameIndex) {
             if (!sensorData.length || frameIndex >= sensorData.length) return;
             
             const data = sensorData[frameIndex];
-            const { x, y, z } = data;
-            const resultant = calculateResultant(x, y, z);
-            const dominantAxis = getDominantAxis(x, y, z);
-            const dirName = getDirectionName(dominantAxis);
-            const dirIcon = getDirectionIcon(dominantAxis);
+            const resultant = data.resultant;
+            const dominantAxis = getDominantAxis(data.x, data.y, data.z);
             
-            document.getElementById('valX').textContent = x;
-            document.getElementById('valY').textContent = y;
-            document.getElementById('valZ').textContent = z;
-            document.getElementById('resultantVal').textContent = resultant;
-            document.getElementById('frameCounter').textContent = `Frame: ${frameIndex + 1} / ${sensorData.length}`;
-            document.getElementById('timelineFrameInfo').textContent = `Frame ${frameIndex + 1}/${sensorData.length}`;
+            updateFrameDisplay(frameIndex);
             
-            if (!isScrubbing) {
-                const timelineSlider = document.getElementById('timelineSlider');
-                timelineSlider.max = sensorData.length - 1;
-                timelineSlider.value = frameIndex;
+            if (currentAxisLabelSpan) {
+                currentAxisLabelSpan.textContent = getShortAxisName(dominantAxis);
             }
-            
-            const badge = document.getElementById('directionBadge');
-            badge.innerHTML = `${dirIcon} ${dirName}`;
-            badge.style.borderLeftColor = '#FFD700';
             
             setDeviceOrientation(dominantAxis);
-            
-            const rawMagnitude = parseFloat(resultant);
-            let magnitude = (rawMagnitude / 800) * movementSensitivity;
-            magnitude = Math.min(0.8, magnitude);
-            if (rawMagnitude > 0 && rawMagnitude < 100) magnitude = Math.max(0.08, magnitude);
-            
-            let dirX = 0, dirY = 0, dirZ = 0;
-            if (dominantAxis === '+X') dirX = 1;
-            else if (dominantAxis === '-X') dirX = -1;
-            else if (dominantAxis === '+Y') dirY = 1;
-            else if (dominantAxis === '-Y') dirY = -1;
-            else if (dominantAxis === '+Z') dirZ = 1;
-            else if (dominantAxis === '-Z') dirZ = -1;
-            
-            deviceGroup.position.x = dirX * magnitude * 0.6;
-            deviceGroup.position.y = restingY + (dirY * magnitude * 0.25);
-
-            deviceGroup.position.z = dirZ * magnitude * 0.6;
-            
-            const intensity = Math.min(1.0, rawMagnitude / 500);
-            ledMat.emissiveIntensity = 0.2 + intensity;
-            
-            if (showTrail) updateTrail(deviceGroup.position);
-            
-            const progress = ((frameIndex + 1) / sensorData.length) * 100;
-            document.getElementById('progressFill').style.width = `${progress}%`;
-        }
-        
-        function goToFrame(frameIndex) {
-            if (frameIndex >= 0 && frameIndex < sensorData.length) {
-                currentFrame = frameIndex;
-                updateVisualization(currentFrame);
-            }
+            updateLEDIntensity(resultant);
+            updateMapLocation(frameIndex);
+            drawResultantGraph();
         }
         
         function startAnimation() {
             if (isPlaying) return;
             if (!sensorData.length) {
-                document.getElementById('statusMsg').innerHTML = '❌ No data loaded! Upload a file first.';
-                document.getElementById('statusMsg').className = 'status error';
+                if (statusMsgDiv) statusMsgDiv.innerHTML = '❌ No data loaded! Upload a file first.';
                 return;
             }
             isPlaying = true;
-            document.getElementById('playBtn').textContent = '⏸ Playing...';
-            document.getElementById('statusMsg').innerHTML = '▶️ Playing animation - Watch device move on floor!';
-            document.getElementById('statusMsg').className = 'status success';
+            const playBtn = document.getElementById('playBtn');
+            if (playBtn) playBtn.textContent = '⏸ Playing...';
             
             function step() {
                 if (!isPlaying) return;
                 updateVisualization(currentFrame);
                 currentFrame++;
-                if (currentFrame >= sensorData.length) { 
-                    currentFrame = 0; 
-                    if (showTrail) clearTrail();
-                }
+                if (currentFrame >= sensorData.length) currentFrame = 0;
                 animationInterval = setTimeout(() => requestAnimationFrame(step), frameInterval);
             }
             if (animationInterval) clearTimeout(animationInterval);
@@ -1002,22 +967,35 @@ function setDeviceOrientation(dominantAxis) {
         function pauseAnimation() {
             isPlaying = false;
             if (animationInterval) { clearTimeout(animationInterval); animationInterval = null; }
-            document.getElementById('playBtn').textContent = '▶ Play';
-            document.getElementById('statusMsg').innerHTML = '⏸ Paused';
-            document.getElementById('statusMsg').className = 'status';
+            const playBtn = document.getElementById('playBtn');
+            if (playBtn) playBtn.textContent = '▶ Play';
+            if (statusMsgDiv) {
+                statusMsgDiv.innerHTML = '⏸ Paused';
+                statusMsgDiv.className = 'status';
+            }
         }
         
-        async function processFile(file) {
-            if (!file) return;
-            if (fileProcessed) return;
-            fileProcessed = true;
-            
+        function resetToStart() {
             pauseAnimation();
-            clearTrail();
-            
-            const statusDiv = document.getElementById('statusMsg');
-            statusDiv.innerHTML = `📖 Reading ${file.name}...`;
-            statusDiv.className = 'status';
+            currentFrame = 0;
+            if (sensorData.length) {
+                updateVisualization(0);
+                if (trailLine) map.removeLayer(trailLine);
+                trailLine = null;
+            }
+            if (timelineSlider) timelineSlider.value = 0;
+            setDeviceOrientation('+Z');
+            if (currentAxisLabelSpan) currentAxisLabelSpan.textContent = '+Z';
+        }
+        
+        let isProcessing = false;
+        async function processFile(file) {
+            if (!file || isProcessing) return;
+            isProcessing = true;
+            if (statusMsgDiv) {
+                statusMsgDiv.innerHTML = '📖 Reading file...';
+                statusMsgDiv.className = 'status';
+            }
             
             try {
                 const data = await file.arrayBuffer();
@@ -1026,123 +1004,175 @@ function setDeviceOrientation(dominantAxis) {
                 const json = XLSX.utils.sheet_to_json(sheet);
                 
                 const newData = [];
+                let beeName = "BSF3951304";
+                
                 for (const row of json) {
-                    let x = row.X || row.x || row['X'] || null;
-                    let y = row.Y || row.y || row['Y'] || null;
-                    let z = row.Z || row.z || row['Z'] || null;
-                    if (x !== null && y !== null && z !== null) {
-                        x = parseFloat(x); y = parseFloat(y); z = parseFloat(z);
-                        if (!isNaN(x) && !isNaN(y) && !isNaN(z)) newData.push({ x, y, z });
+                    let msgStr = row.msg || row.message || row.MSG || row.Message || '';
+                    if (typeof msgStr !== 'string') continue;
+                    
+                    let msgObj;
+                    try {
+                        msgObj = JSON.parse(msgStr);
+                    } catch(e) { continue; }
+                    
+                    if (msgObj.MAJOR !== 'RESP') continue;
+                    
+                    if (msgObj.bee_name) {
+                        beeName = msgObj.bee_name;
                     }
+                    
+                    let x = null, y = null, z = null;
+                    
+                    if (msgObj.external_data?.aovx?.[0]?.body?.extension) {
+                        for (const ext of msgObj.external_data.aovx[0].body.extension) {
+                            if (ext.id === 'F6') {
+                                x = ext.x; y = ext.y; z = ext.z;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (x === undefined && msgObj.x !== undefined) { x = msgObj.x; y = msgObj.y; z = msgObj.z; }
+                    if (x === undefined || y === undefined || z === undefined) continue;
+                    
+                    x = parseFloat(x); y = parseFloat(y); z = parseFloat(z);
+                    if (isNaN(x) || isNaN(y) || isNaN(z)) continue;
+                    
+                    let lat = null, lng = null, address = null;
+                    
+                    if (msgObj.geo) {
+                        lat = msgObj.geo.lat;
+                        lng = msgObj.geo.lng;
+                        address = msgObj.geo.address;
+                    }
+                    
+                    if ((lat === null || lng === null) && msgObj.GPS) {
+                        lat = parseFloat(msgObj.GPS.latitude);
+                        lng = parseFloat(msgObj.GPS.longitude);
+                    }
+                    
+                    if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) continue;
+                    
+                    let datetime = msgObj.datetime || msgObj.date || msgObj.send_time || '';
+                    
+                    newData.push({ 
+                        x, y, z, lat, lng, address, datetime,
+                        resultant: calculateResultant(x, y, z)
+                    });
                 }
                 
                 if (newData.length > 0) {
-                    sensorData = newData;
+                    currentBeeName = beeName;
+                    if (beeNameBadge) beeNameBadge.innerHTML = `${beeName}`;
+                    sensorData = newData.reverse();
                     currentFrame = 0;
-                    const firstRow = sensorData[0];
-                    const defaultAxis = getDominantAxis(firstRow.x, firstRow.y, firstRow.z);
-                    const defaultDirName = getDirectionName(defaultAxis);
                     
-                    document.getElementById('defaultOrientation').innerHTML = `📍 First frame orientation: ${defaultDirName}`;
-                    statusDiv.innerHTML = `✅ Loaded ${sensorData.length} frames! Device shown on floor.`;
-                    statusDiv.className = 'status success';
+                    resultantData = sensorData.map(d => d.resultant);
+                    resultantChart = document.getElementById('resultantCanvas');
+                    if (graphContainer) graphContainer.style.display = 'block';
                     
-                    deviceGroup.position.set(0, restingY, 0);
-                    originalPosition = { x: 0, y: 0, z: 0 };
-                    
+                    updateGraphStats();
+                    drawResultantGraph();
+                    drawRoute();
+                    addAllLocationMarkers();
                     updateVisualization(0);
-                    const timelineSlider = document.getElementById('timelineSlider');
-                    timelineSlider.max = sensorData.length - 1;
+                    if (timelineSlider && sensorData.length) {
+                        timelineSlider.max = sensorData.length - 1;
+                    }
+                    fitRouteBounds();
+                    
+                    if (statusMsgDiv) {
+                        statusMsgDiv.innerHTML = `✅ ${sensorData.length} frames loaded | Device: ${beeName}`;
+                        statusMsgDiv.className = 'status success';
+                    }
                 } else {
-                    statusDiv.innerHTML = '❌ No X,Y,Z columns found. Use columns named: X, Y, Z';
-                    statusDiv.className = 'status error';
+                    if (statusMsgDiv) {
+                        statusMsgDiv.innerHTML = '❌ No RESP messages with X,Y,Z and GPS found';
+                        statusMsgDiv.className = 'status error';
+                    }
                 }
             } catch (err) {
-                statusDiv.innerHTML = `❌ Error: ${err.message}`;
-                statusDiv.className = 'status error';
+                if (statusMsgDiv) {
+                    statusMsgDiv.innerHTML = `❌ Error: ${err.message}`;
+                    statusMsgDiv.className = 'status error';
+                }
+                console.error(err);
             } finally {
-                setTimeout(() => { fileProcessed = false; }, 500);
+                isProcessing = false;
             }
         }
         
-        // Event listeners
-        const fileInput = document.getElementById('fileInput');
+        // Event listeners and initialization
+        initMap();
+        init3D();
+        
         const uploadBtn = document.getElementById('uploadBtn');
+        const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('fileDropZone');
         
-        uploadBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            fileInput.click();
-        });
-        
-        dropZone.addEventListener('click', (e) => {
-            if (e.target === dropZone || e.target.classList.contains('file-input-area')) {
-                fileInput.click();
-            }
-        });
-        
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) {
-                processFile(e.target.files[0]);
-                fileInput.value = '';
-            }
-        });
-        
-        dropZone.addEventListener('dragover', (e) => e.preventDefault());
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                processFile(e.dataTransfer.files[0]);
-            }
-        });
-        
-        document.getElementById('timelineSlider').addEventListener('input', (e) => {
-            if (sensorData.length) {
-                isScrubbing = true;
-                goToFrame(parseInt(e.target.value));
-                isScrubbing = false;
-            }
-        });
-        
-        document.getElementById('speedSlider').addEventListener('input', (e) => {
-            frameInterval = parseInt(e.target.value);
-            const fps = Math.round(1000 / frameInterval);
-            document.getElementById('speedValue').textContent = frameInterval > 150 ? `Very Slow (${fps}fps)` : `Normal (${fps}fps)`;
-            if (isPlaying) { pauseAnimation(); startAnimation(); }
-        });
-        
-        document.getElementById('sensitivitySlider').addEventListener('input', (e) => {
-            movementSensitivity = parseFloat(e.target.value);
-            document.getElementById('sensitivityValue').textContent = `${movementSensitivity.toFixed(1)}x`;
-            if (sensorData.length) updateVisualization(currentFrame);
-        });
-        
-        document.getElementById('trailToggle').addEventListener('change', (e) => { showTrail = e.target.checked; if (!showTrail) clearTrail(); });
-        document.getElementById('resetTrailBtn').addEventListener('click', clearTrail);
-        document.getElementById('playBtn').addEventListener('click', startAnimation);
-        document.getElementById('pauseBtn').addEventListener('click', pauseAnimation);
-        document.getElementById('resetBtn').addEventListener('click', resetToStart);
-        
-        function render() {
-            particles.rotation.y += 0.002;
-            controls.update();
-            renderer.render(scene, camera);
-            labelRenderer.render(scene, camera);
-            requestAnimationFrame(render);
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', (e) => { e.stopPropagation(); if(fileInput) fileInput.click(); });
         }
-        render();
+        if (dropZone) {
+            dropZone.addEventListener('click', (e) => { e.stopPropagation(); if(fileInput) fileInput.click(); });
+        }
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    processFile(e.target.files[0]);
+                }
+                fileInput.value = '';
+            });
+        }
         
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            labelRenderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        const timelineSliderElem = document.getElementById('timelineSlider');
+        if (timelineSliderElem) {
+            timelineSliderElem.addEventListener('input', (e) => {
+                if (sensorData.length) {
+                    pauseAnimation();
+                    currentFrame = parseInt(e.target.value);
+                    updateVisualization(currentFrame);
+                }
+            });
+        }
         
-        // Default orientation: ROAMBEE facing SKY (lying on floor)
+        const speedSlider = document.getElementById('speedSlider');
+        if (speedSlider) {
+            speedSlider.addEventListener('input', (e) => {
+                frameInterval = parseInt(e.target.value);
+                const fps = Math.round(1000 / frameInterval);
+                let speedText = 'Very Slow';
+                if (frameInterval <= 300) speedText = 'Slow';
+                if (frameInterval <= 200) speedText = 'Normal';
+                if (speedValueSpan) speedValueSpan.textContent = `${speedText} (${fps} fps)`;
+                if (isPlaying) { pauseAnimation(); startAnimation(); }
+            });
+        }
+        
+        
+        
+        const playBtnElem = document.getElementById('playBtn');
+        const pauseBtnElem = document.getElementById('pauseBtn');
+        const resetBtnElem = document.getElementById('resetBtn');
+        const fitBoundsBtnElem = document.getElementById('fitBoundsBtn');
+        
+        if (playBtnElem) playBtnElem.addEventListener('click', startAnimation);
+        if (pauseBtnElem) pauseBtnElem.addEventListener('click', pauseAnimation);
+        if (resetBtnElem) resetBtnElem.addEventListener('click', resetToStart);
+        if (fitBoundsBtnElem) fitBoundsBtnElem.addEventListener('click', fitRouteBounds);
+        
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => e.preventDefault());
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+            });
+        }
+        
         setDeviceOrientation('+Z');
-        deviceGroup.position.set(0, restingY, 0);        
-        console.log('✅ Device on floor surface - ROAMBEE logo facing SKY (+Z)');
+        if (currentAxisLabelSpan) currentAxisLabelSpan.textContent = '+Z';
+        
+        console.log('Ready! Upload CSV with msg column containing JSON data');
     </script>
 </body>
 </html>
