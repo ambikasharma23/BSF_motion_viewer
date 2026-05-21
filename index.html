@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BeeSense Flex - Device on Floor | Proper Orientation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            background: #e8eaed;
+        }
+        
+        .control-panel {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 12px 15px;
+            color: #1a1a2e;
+            z-index: 100;
+            width: 280px;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            pointer-events: auto;
+            font-size: 12px;
+        }
+        
+        .control-panel h3 {
+            margin: 0 0 3px 0;
+            font-size: 14px;
+            color: #2c7ed6;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .control-panel p {
+            margin: 0 0 8px 0;
+            font-size: 10px;
+            opacity: 0.6;
+        }
+        
+        .file-input-area {
+            background: #f5f5f5;
+            border: 1.5px dashed #2c7ed6;
+            border-radius: 8px;
+            padding: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+        
+        .file-input-area:hover {
+            background: #e8f0fe;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .upload-label {
+            cursor: pointer;
+            display: inline-block;
+            padding: 4px 10px;
+            background: #2c7ed6;
+            border-radius: 5px;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .sensor-display {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 6px 8px;
+            margin: 6px 0;
+            font-family: 'Monaco', monospace;
+            font-size: 10px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .sensor-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 2px 0;
+        }
+        
+        .axis-x { color: #ff4444; font-weight: bold; }
+        .axis-y { color: #44ff44; font-weight: bold; }
+        .axis-z { color: #4444ff; font-weight: bold; }
+        
+        .direction-badge {
+            background: #f0f0f0;
+            padding: 5px 8px;
+            border-radius: 6px;
+            margin: 6px 0;
+            text-align: center;
+            font-weight: bold;
+            font-size: 11px;
+            border-left: 3px solid #FFD700;
+        }
+        
+        .default-orientation {
+            background: #e8f4fd;
+            padding: 4px 6px;
+            border-radius: 5px;
+            margin: 5px 0;
+            font-size: 9px;
+            text-align: center;
+            color: #2c7ed6;
+        }
+        
+        .speed-control, .sensitivity-control {
+            margin: 6px 0;
+        }
+        
+        .speed-control label, .sensitivity-control label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+            font-size: 9px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            background: #e0e0e0;
+            height: 3px;
+            border-radius: 2px;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #2c7ed6;
+            cursor: pointer;
+        }
+        
+        .timeline-container {
+            margin: 10px 0 8px 0;
+        }
+        
+        .timeline-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            margin-bottom: 4px;
+            color: #666;
+        }
+        
+        #timelineSlider {
+            width: 100%;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+        }
+        
+        #timelineSlider::-webkit-slider-thumb {
+            width: 14px;
+            height: 14px;
+            background: #2c7ed6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .trail-toggle {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 5px 6px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #e8e8e8;
+            color: #333;
+            font-size: 10px;
+        }
+        
+        button.primary {
+            background: #2c7ed6;
+            color: white;
+        }
+        
+        button.primary:hover {
+            background: #1a6bbf;
+        }
+        
+        button:hover {
+            background: #d0d0d0;
+        }
+        
+        .status {
+            font-size: 9px;
+            margin-top: 6px;
+            padding: 4px;
+            border-radius: 5px;
+            background: #f0f0f0;
+            text-align: center;
+            color: #555;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 2px;
+            background: #e0e0e0;
+            border-radius: 1px;
+            margin: 6px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #2c7ed6;
+            width: 0%;
+            transition: width 0.05s linear;
+        }
+        
+        .frame-counter {
+            text-align: center;
+            font-size: 9px;
+            margin-top: 4px;
+            color: #666;
+        }
+        
+        .device-badge {
+            background: #FFD700;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 8px;
+            display: inline-block;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="control-panel">
+        <h3>
+              BeeSense Flex 
+            <span class="device-badge">On Floor Surface</span>
+        </h3>
+        <p>Upload CSV/Excel with X, Y, Z columns</p>
+        
+        <div class="file-input-area" id="fileDropZone">
+            <div class="upload-label" id="uploadBtn">📂 Choose File</div>
+            <div style="font-size: 8px; margin-top: 3px;">.csv, .xlsx, .xls</div>
+        </div>
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.xlsm">
+        
+        <div class="default-orientation" id="defaultOrientation">
+            📍 Device resting on floor | ROAMBEE logo facing SKY (+Z)
+        </div>
+        
+        <div class="sensor-display">
+            <div class="sensor-row">
+                <span>🎯 Resultant:</span>
+                <span id="resultantVal" style="color:#ff8800; font-weight: bold;">0</span>
+            </div>
+            <div class="sensor-row">
+                <span class="axis-x">X:</span>
+                <span id="valX" class="axis-x">0</span>
+                <span class="axis-y" style="margin-left: 12px;">Y:</span>
+                <span id="valY" class="axis-y">0</span>
+                <span class="axis-z" style="margin-left: 12px;">Z:</span>
+                <span id="valZ" class="axis-z">0</span>
+            </div>
+        </div>
+        
+        <div class="direction-badge" id="directionBadge">
+            🧭 +Z Direction - ROAMBEE logo facing SKY (Default)
+        </div>
+        
+        <div class="timeline-container">
+            <div class="timeline-label">
+                <span>⏪ Timeline Scrubber</span>
+                <span id="timelineFrameInfo">Frame 0/0</span>
+            </div>
+            <input type="range" id="timelineSlider" min="0" max="100" value="0" step="1">
+        </div>
+        
+        <div class="speed-control">
+            <label>
+                <span>🐢 Speed</span>
+                <span id="speedValue">Normal</span>
+            </label>
+            <input type="range" id="speedSlider" min="50" max="300" value="120" step="10">
+        </div>
+        
+        <div class="sensitivity-control">
+            <label>
+                <span>📊 Sensitivity</span>
+                <span id="sensitivityValue">2.5x</span>
+            </label>
+            <input type="range" id="sensitivitySlider" min="1" max="5" value="2.5" step="0.1">
+        </div>
+        
+        <div class="trail-toggle">
+            <input type="checkbox" id="trailToggle">
+            <label for="trailToggle">✨ Show movement trail</label>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="frame-counter" id="frameCounter">Frame: 0 / 0</div>
+        
+        <div class="button-group">
+            <button id="playBtn" class="primary">▶ Play</button>
+            <button id="pauseBtn">⏸ Pause</button>
+            <button id="resetBtn">⟳ Reset to Start</button>
+            <button id="resetTrailBtn">🗑️ Trail</button>
+        </div>
+        
+        <div class="status" id="statusMsg">
+            📁 Click to upload vibration data
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/",
+                "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/package/xlsx.mjs"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+        import * as XLSX from 'xlsx';
+        
+        let sensorData = [];
+        let currentFrame = 0;
+        let isPlaying = false;
+        let animationInterval = null;
+        let frameInterval = 120;
+        let movementSensitivity = 2.5;
+        let trailPositions = [];
+        let trailPoints = null;
+        let showTrail = false;
+        let isScrubbing = false;
+        let fileProcessed = false;
+        
+        function getDominantAxis(x, y, z) {
+            const absX = Math.abs(x);
+            const absY = Math.abs(y);
+            const absZ = Math.abs(z);
+            
+            if (absX >= absY && absX >= absZ) {
+                return x >= 0 ? '+X' : '-X';
+            } else if (absY >= absX && absY >= absZ) {
+                return y >= 0 ? '+Y' : '-Y';
+            } else {
+                return z >= 0 ? '+Z' : '-Z';
+            }
+        }
+        
+        function getDirectionName(axis) {
+         const names = {
+        '+X': "+X - Flat rotated LEFT",
+        '-X': "-X - Flat rotated RIGHT",
+        '+Y': "+Y - Vertical upright",
+        '-Y': "-Y - Vertical upside down",
+        '+Z': "+Z - Flat, logo facing SKY",
+        '-Z': "-Z - Flat upside down"
+    };
+
+    return names[axis] || "Unknown";
+}
+        
+        function getDirectionIcon(axis) {
+            const icons = { '-X': "➡️", '+X': "⬅️", '-Y': "🔄⬆️", '+Y': "⬆️", '+Z': "☁️⬆️", '-Z': "🔌⬆️" };
+            return icons[axis] || "🎯";
+        }
+        
+        function calculateResultant(x, y, z) {
+            return Math.sqrt(x*x + y*y + z*z).toFixed(1);
+        }
+        
+        // Setup scene
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xe8eaed);
+        
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(4, 4.5, 5.5);
+        camera.lookAt(0, 0, 0);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+        
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        document.body.appendChild(labelRenderer.domElement);
+        
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = false;
+        controls.enableZoom = true;
+        controls.target.set(0, 0.5, 0);
+        
+        // ========== FLOOR / SURFACE ==========
+        // Floor plane with grid and material
+        const floorMat = new THREE.MeshStandardMaterial({
+                color: 0x7c7c7c,
+                roughness: 0.95,
+                metalness: 0.02
+            });
+        const floorPlane = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), floorMat);
+        floorPlane.rotation.x = -Math.PI / 2;
+        floorPlane.position.y = -0.7;
+        floorPlane.receiveShadow = true;
+        scene.add(floorPlane);
+        
+        // Floor grid helper
+        const floorGrid = new THREE.GridHelper(8, 20, 0x8899aa, 0xaabbcc);
+        floorGrid.position.y = -0.69;
+        floorGrid.material.transparent = true;
+        floorGrid.material.opacity = 0.5;
+        scene.add(floorGrid);
+        
+        // Add a subtle circular shadow catcher
+        const shadowMat = new THREE.MeshStandardMaterial({ color: 0x000000, transparent: true, opacity: 0.32 });
+        const shadowDisk = new THREE.Mesh(new THREE.CircleGeometry(1.6, 32), shadowMat);
+        shadowDisk.rotation.x = -Math.PI / 2;
+        shadowDisk.position.y = -0.68;
+        shadowDisk.receiveShadow = true;
+        scene.add(shadowDisk);
+        
+        // Device group
+        const deviceGroup = new THREE.Group();
+        scene.add(deviceGroup);
+        
+        // Bright Yellow color
+        const brightYellow = 0xFFD700;
+        
+        // Dimensions: ROAMBEE face is larger (130mm x 80mm), thickness 27mm
+        const scale = 1.2;
+        const widthX = 0.8 * scale;   // X-axis (80mm)
+        const heightY = 1.3 * scale;  // Y-axis (130mm)
+        const depthZ = 0.27 * scale;  // Z-axis (27mm thickness)
+        
+        const bodyGeo = new THREE.BoxGeometry(widthX, heightY, depthZ);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: brightYellow, roughness: 0.3, metalness: 0.05 });
+        const mainBody = new THREE.Mesh(bodyGeo, bodyMat);
+        mainBody.castShadow = true;
+        mainBody.receiveShadow = true;
+        deviceGroup.add(mainBody);
+        
+        // Add edge highlights
+        const edgesGeo = new THREE.EdgesGeometry(bodyGeo);
+        const edgesMat = new THREE.LineBasicMaterial({ color: 0xCCA800 });
+        const wireframe = new THREE.LineSegments(edgesGeo, edgesMat);
+        deviceGroup.add(wireframe);
+        
+        // FRONT FACE (+Z direction) - ROAMBEE logo (larger face)
+        const frontCanvas = document.createElement('canvas');
+        frontCanvas.width = 1024;
+        frontCanvas.height = 1024;
+        const frontCtx = frontCanvas.getContext('2d');
+        frontCtx.fillStyle = '#FFD700';
+        frontCtx.fillRect(0, 0, frontCanvas.width, frontCanvas.height);
+        
+        // Black bold ROAMBEE text
+        frontCtx.fillStyle = '#000000';
+        frontCtx.font = 'Bold 80px "Arial Black", "Segoe UI Black", sans-serif';
+        frontCtx.textAlign = 'center';
+        frontCtx.fillText("roambee", frontCanvas.width/2, frontCanvas.height/2 - 60);
+        
+        // Serial number
+        frontCtx.font = '22px "Courier New", monospace';
+        frontCtx.fillStyle = '#333333';
+        frontCtx.fillText("869487061831284", frontCanvas.width/2, frontCanvas.height/2);
+        
+        // READY FOR USE
+        frontCtx.font = 'Bold 32px "Segoe UI", Arial';
+        frontCtx.fillStyle = '#000000';
+        frontCtx.fillText("READY FOR USE", frontCanvas.width/2, frontCanvas.height/2 + 60);
+        
+        // LISTO PARA USAR
+        frontCtx.font = '26px "Segoe UI", Arial';
+        frontCtx.fillStyle = '#555555';
+        frontCtx.fillText("LISTO PARA USAR", frontCanvas.width/2, frontCanvas.height/2 + 110);
+        
+        // STATUS / 即用型
+        frontCtx.font = '22px "Segoe UI", Arial';
+        frontCtx.fillStyle = '#666666';
+        frontCtx.fillText("STATUS  即用型", frontCanvas.width/2, frontCanvas.height/2 + 160);
+        
+        // Small circular button
+        frontCtx.fillStyle = '#333333';
+        frontCtx.beginPath();
+        frontCtx.arc(frontCanvas.width/2, frontCanvas.height/2 + 220, 20, 0, 2 * Math.PI);
+        frontCtx.fill();
+        frontCtx.fillStyle = '#666666';
+        frontCtx.beginPath();
+        frontCtx.arc(frontCanvas.width/2, frontCanvas.height/2 + 220, 14, 0, 2 * Math.PI);
+        frontCtx.fill();
+        
+        const frontTexture = new THREE.CanvasTexture(frontCanvas);
+        
+        // BACK FACE (-Z direction) - USB-C and model info
+        const backCanvas = document.createElement('canvas');
+        backCanvas.width = 1024;
+        backCanvas.height = 1024;
+        const backCtx = backCanvas.getContext('2d');
+        backCtx.fillStyle = '#FFD700';
+        backCtx.fillRect(0, 0, backCanvas.width, backCanvas.height);
+        
+        // USB-C port
+        backCtx.fillStyle = '#222222';
+        backCtx.fillRect(backCanvas.width/2 - 70, backCanvas.height/2 - 60, 140, 70);
+        backCtx.fillStyle = '#888888';
+        backCtx.fillRect(backCanvas.width/2 - 50, backCanvas.height/2 - 45, 100, 40);
+        backCtx.fillStyle = '#444444';
+        backCtx.fillRect(backCanvas.width/2 - 35, backCanvas.height/2 - 35, 70, 25);
+        backCtx.fillStyle = '#ffffff';
+        backCtx.font = '28px "Segoe UI", Arial';
+        backCtx.fillText("USB-C", backCanvas.width/2, backCanvas.height/2 + 20);
+        
+        // Model info
+        backCtx.fillStyle = '#000000';
+        backCtx.font = 'Bold 32px "Segoe UI", Arial';
+        backCtx.fillText("Model: BNG500", backCanvas.width/2, backCanvas.height/2 + 90);
+        
+        // Certifications
+        backCtx.font = '20px "Segoe UI", Arial';
+        backCtx.fillStyle = '#333333';
+        backCtx.fillText("CE FC • RoHS", backCanvas.width/2, backCanvas.height/2 + 150);
+        backCtx.fillText("MADE IN CHINA", backCanvas.width/2, backCanvas.height/2 + 190);
+        
+        const backTexture = new THREE.CanvasTexture(backCanvas);
+        
+        // Other sides are plain yellow
+        const plainYellowMat = new THREE.MeshStandardMaterial({ color: brightYellow, roughness: 0.3, metalness: 0.05 });
+        
+        // Materials order: right (+X), left (-X), up (+Y), down (-Y), front (+Z), back (-Z)
+        const materials = [
+            plainYellowMat,      // right side - plain
+            plainYellowMat,      // left side - plain
+            plainYellowMat,      // top side - plain
+            plainYellowMat,      // bottom side - plain
+            new THREE.MeshStandardMaterial({ map: frontTexture, color: brightYellow }), // front (+Z) - ROAMBEE
+            new THREE.MeshStandardMaterial({ map: backTexture, color: brightYellow })   // back (-Z) - USB-C
+        ];
+        
+        const texturedBody = new THREE.Mesh(bodyGeo, materials);
+        texturedBody.castShadow = true;
+        texturedBody.receiveShadow = true;
+        deviceGroup.add(texturedBody);
+        // Make device lie flat on floor by default
+        // texturedBody.rotation.x = Math.PI / 2;
+        // wireframe.rotation.x = Math.PI / 2;
+        // button.rotation.x = Math.PI / 2;
+        scene.add(deviceGroup);
+
+          
+        // LED indicator
+        const ledMat = new THREE.MeshStandardMaterial({
+            color: 0x111111,
+            emissive: 0x00ff66,
+            emissiveIntensity: 0.2
+        });
+
+        const ledLight = new THREE.Mesh(
+            new THREE.SphereGeometry(0.08, 16, 16),
+            ledMat
+        );
+
+        ledLight.position.set(0.4, 0.15, -0.65);
+        deviceGroup.add(ledLight);
+        
+        
+        // 3D button on front face
+        const buttonMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.3 });
+        const button = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.05, 16), buttonMat);
+        button.position.set(0, -0.5, 0.16);
+        deviceGroup.add(button);
+        
+        // Store original state
+        let originalPosition = { x: 0, y: 0, z: 0 };
+        
+        // ORIENTATION FUNCTION - Device resting on floor
+
+const floorY = -0.7;
+const restingY = floorY + depthZ / 2;
+
+// function setDeviceOrientation(dominantAxis) {
+
+//     // Reset rotation every frame
+//     deviceGroup.rotation.set(0, 0, 0);
+
+//     switch(dominantAxis) {
+
+//         case '+Z':
+//             // Flat on floor - logo facing UP
+//             deviceGroup.rotation.x = -Math.PI / 2;
+//             break;
+
+//         case '-Z':
+//             // Flat upside down
+//             deviceGroup.rotation.x = Math.PI / 2;
+//             break;
+
+//         case '+X':
+//             // Left edge down
+//             deviceGroup.rotation.z = -Math.PI / 2;
+//             break;
+
+//         case '-X':
+//             // Right edge down
+//             deviceGroup.rotation.z = Math.PI / 2;
+//             break;
+
+//         case '+Y':
+//             // Standing upright
+//             deviceGroup.rotation.x = 0;
+//             break;
+
+//         case '-Y':
+//             // Upside down vertical
+//             deviceGroup.rotation.z = Math.PI;
+//             break;
+//     }
+// }
+// function setDeviceOrientation(dominantAxis) {
+
+//     // Reset
+//     deviceGroup.rotation.set(0, 0, 0);
+
+//     switch(dominantAxis) {
+
+//         case '+Z':
+//             // Flat on table
+//             deviceGroup.rotation.x = -Math.PI / 2;
+//             break;
+
+//         case '-Z':
+//             // Flat upside down
+//             deviceGroup.rotation.x = Math.PI / 2;
+//             break;
+
+//         // case '+X':
+//         //     // Tilt LEFT like your image
+//         //     deviceGroup.rotation.x = -Math.PI / 2;
+//         //     deviceGroup.rotation.z = -Math.PI / 2;
+//         //     break;
+
+//         // case '-X':
+//         //     // Tilt RIGHT like your image
+//         //     deviceGroup.rotation.x = -Math.PI / 2;
+//         //     deviceGroup.rotation.z = Math.PI / 2;
+//             case '+X':
+//             // Tilt LEFT
+//             deviceGroup.rotation.z = -Math.PI / 2;
+//             break;
+
+//         case '-X':
+//             // Tilt RIGHT
+//             deviceGroup.rotation.z = Math.PI / 2;
+//             break;
+//             break;
+
+//         case '+Y':
+//             // Vertical upright
+//             deviceGroup.rotation.x = 0;
+//             break;
+
+//         case '-Y':
+//             // Vertical opposite
+//             deviceGroup.rotation.x = Math.PI;
+//             break;
+//     }
+// }
+function setDeviceOrientation(dominantAxis) {
+
+    switch(dominantAxis) {
+
+        case '+Z':
+            // Flat on floor
+            deviceGroup.rotation.set(-Math.PI / 2, 0, 0);
+            break;
+
+        case '-Z':
+    // Flat upside down (USB side facing SKY)
+    deviceGroup.rotation.set(Math.PI / 2, 0, 0);
+    break;
+        // case '+X':
+        //     // Stand upright, face LEFT
+        //     deviceGroup.rotation.set(0, Math.PI / 2, 0);
+        //     break;
+        case '+X':
+            // Flat rotated LEFT
+            deviceGroup.rotation.set(
+                -Math.PI / 2,   // keep flat
+                -Math.PI / 2,   // rotate toward -Y
+                0
+            );
+            break;    
+
+        // case '-X':
+        //     // Stand upright, face RIGHT
+        //     deviceGroup.rotation.set(0, -Math.PI / 2, 0);
+        //     break;
+        case '-X':
+            // Flat rotated RIGHT
+            deviceGroup.rotation.set(
+                -Math.PI / 2,
+                Math.PI / 2,
+                0
+            );
+            break;    
+
+        case '+Y':
+            // Upright front
+            deviceGroup.rotation.set(0, 0, 0);
+            break;
+
+        // case '-Y':
+        //     // Upright backside
+        //     deviceGroup.rotation.set(0, Math.PI, 0);
+        //     break;
+        case '-Y':
+            // Vertical, rotated 180° left
+            // ROAMBEE becomes upside down
+            deviceGroup.rotation.set(
+                0,
+                0,
+                Math.PI
+            );
+            break;
+
+    }
+
+}
+        
+        // World axes helper
+        function createWorldAxes() {
+            const xPoints = [new THREE.Vector3(-5, -0.5, 0), new THREE.Vector3(5, -0.5, 0)];
+            const xLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(xPoints), new THREE.LineBasicMaterial({ color: 0xff3333 }));
+            scene.add(xLine);
+            const xArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(4.5, -0.5, 0), 0.6, 0xff6666, 0.4, 0.2);
+            scene.add(xArrow);
+            
+            const yPoints = [new THREE.Vector3(0, -0.5, 0), new THREE.Vector3(0, 3.5, 0)];
+            const yLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(yPoints), new THREE.LineBasicMaterial({ color: 0x33ff33 }));
+            scene.add(yLine);
+            const yArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 3.2, 0), 0.6, 0x66ff66, 0.4, 0.2);
+            scene.add(yArrow);
+            
+            const zPoints = [new THREE.Vector3(0, -0.5, -4), new THREE.Vector3(0, -0.5, 4)];
+            const zLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(zPoints), new THREE.LineBasicMaterial({ color: 0x3399ff }));
+            scene.add(zLine);
+            const zArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, -0.5, 3.6), 0.6, 0x6699ff, 0.4, 0.2);
+            scene.add(zArrow);
+        }
+        
+        function addWorldLabels() {
+            const makeLabel = (text, color, position) => {
+                const div = document.createElement('div');
+                div.textContent = text;
+                div.style.color = color;
+                div.style.fontSize = '14px';
+                div.style.fontWeight = 'bold';
+                div.style.background = 'rgba(255,255,255,0.9)';
+                div.style.padding = '2px 8px';
+                div.style.borderRadius = '20px';
+                div.style.border = `1px solid ${color}`;
+                const label = new CSS2DObject(div);
+                label.position.copy(position);
+                scene.add(label);
+            };
+            makeLabel('+X (Left)', '#ff8888', new THREE.Vector3(5.2, -0.8, 0));
+            makeLabel('-X (Right)', '#ff8888', new THREE.Vector3(-5.2, -0.8, 0));
+            // WORLD Y = physical UP/DOWN
+            makeLabel('+Z (Sky / Up)', '#8888ff', new THREE.Vector3(0, 4.2, 0));
+            makeLabel('-Z (Floor / Down)', '#8888ff', new THREE.Vector3(0, -1.2, 0));
+
+            // WORLD Z = front/back depth
+            makeLabel('+Y (Front)', '#88ff88', new THREE.Vector3(0, -0.8, 4.6));
+            makeLabel('-Y (Back)', '#88ff88', new THREE.Vector3(0, -0.8, -4.6));
+            
+        }
+        
+        createWorldAxes();
+        addWorldLabels();
+        
+        // Ambient and directional lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+        mainLight.position.set(3, 5, 2);
+        mainLight.castShadow = true;
+        mainLight.receiveShadow = false;
+        mainLight.shadow.mapSize.width = 1024;
+        mainLight.shadow.mapSize.height = 1024;
+        scene.add(mainLight);
+        
+        const fillLight = new THREE.PointLight(0x6688aa, 0.3);
+        fillLight.position.set(0, 2, 0);
+        scene.add(fillLight);
+        
+        const backLight = new THREE.PointLight(0xffaa66, 0.2);
+        backLight.position.set(-1, 1, -3);
+        scene.add(backLight);
+
+        const hemiLight = new THREE.HemisphereLight(
+                0xffffff,
+                0x555555,
+                0.7
+            );
+
+        scene.add(hemiLight);
+        
+        // Particles for ambiance
+        const particleCount = 400;
+        const particlesGeo = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            positions[i*3] = (Math.random() - 0.5) * 12;
+            positions[i*3+1] = (Math.random() - 0.5) * 4 + 1;
+            positions[i*3+2] = (Math.random() - 0.5) * 10;
+        }
+        particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const particles = new THREE.Points(particlesGeo, new THREE.PointsMaterial({ color: 0x88aaff, size: 0.04, transparent: true, opacity: 0.2 }));
+        scene.add(particles);
+        
+        function resetToStart() {
+            pauseAnimation();
+            currentFrame = 0;
+            deviceGroup.position.set(0, restingY, 0);
+            if (sensorData.length > 0) {
+                updateVisualization(0);
+            }
+            const timelineSlider = document.getElementById('timelineSlider');
+            if (timelineSlider) timelineSlider.value = 0;
+            document.getElementById('statusMsg').innerHTML = '🔄 Reset to frame 0';
+        }
+        
+        function updateTrail(position) {
+            if (!showTrail) return;
+            trailPositions.push(position.clone());
+            if (trailPositions.length > 100) trailPositions.shift();
+            if (trailPoints) scene.remove(trailPoints);
+            const points = trailPositions.map(p => new THREE.Vector3(p.x, p.y, p.z));
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            const lineMaterial = new THREE.LineBasicMaterial({
+                    color: 0x111111
+                });            
+            trailPoints = new THREE.Line(lineGeometry, lineMaterial);
+            scene.add(trailPoints);
+            if (window.trailSpheres) window.trailSpheres.forEach(s => scene.remove(s));
+            window.trailSpheres = [];
+            points.forEach((p, idx) => {
+                if (idx % 4 === 0) {
+                    const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshStandardMaterial({ color: 0x44aa88, emissive: 0x226644, emissiveIntensity: 0.2 }));
+                    sphere.position.copy(p);
+                    scene.add(sphere);
+                    window.trailSpheres.push(sphere);
+                }
+            });
+        }
+        
+        function clearTrail() {
+            trailPositions = [];
+            if (trailPoints) { scene.remove(trailPoints); trailPoints = null; }
+            if (window.trailSpheres) { window.trailSpheres.forEach(s => scene.remove(s)); window.trailSpheres = []; }
+        }
+        
+        function updateVisualization(frameIndex) {
+            if (!sensorData.length || frameIndex >= sensorData.length) return;
+            
+            const data = sensorData[frameIndex];
+            const { x, y, z } = data;
+            const resultant = calculateResultant(x, y, z);
+            const dominantAxis = getDominantAxis(x, y, z);
+            const dirName = getDirectionName(dominantAxis);
+            const dirIcon = getDirectionIcon(dominantAxis);
+            
+            document.getElementById('valX').textContent = x;
+            document.getElementById('valY').textContent = y;
+            document.getElementById('valZ').textContent = z;
+            document.getElementById('resultantVal').textContent = resultant;
+            document.getElementById('frameCounter').textContent = `Frame: ${frameIndex + 1} / ${sensorData.length}`;
+            document.getElementById('timelineFrameInfo').textContent = `Frame ${frameIndex + 1}/${sensorData.length}`;
+            
+            if (!isScrubbing) {
+                const timelineSlider = document.getElementById('timelineSlider');
+                timelineSlider.max = sensorData.length - 1;
+                timelineSlider.value = frameIndex;
+            }
+            
+            const badge = document.getElementById('directionBadge');
+            badge.innerHTML = `${dirIcon} ${dirName}`;
+            badge.style.borderLeftColor = '#FFD700';
+            
+            setDeviceOrientation(dominantAxis);
+            
+            const rawMagnitude = parseFloat(resultant);
+            let magnitude = (rawMagnitude / 800) * movementSensitivity;
+            magnitude = Math.min(0.8, magnitude);
+            if (rawMagnitude > 0 && rawMagnitude < 100) magnitude = Math.max(0.08, magnitude);
+            
+            let dirX = 0, dirY = 0, dirZ = 0;
+            if (dominantAxis === '+X') dirX = 1;
+            else if (dominantAxis === '-X') dirX = -1;
+            else if (dominantAxis === '+Y') dirY = 1;
+            else if (dominantAxis === '-Y') dirY = -1;
+            else if (dominantAxis === '+Z') dirZ = 1;
+            else if (dominantAxis === '-Z') dirZ = -1;
+            
+            deviceGroup.position.x = dirX * magnitude * 0.6;
+            deviceGroup.position.y = restingY + (dirY * magnitude * 0.25);
+
+            deviceGroup.position.z = dirZ * magnitude * 0.6;
+            
+            const intensity = Math.min(1.0, rawMagnitude / 500);
+            ledMat.emissiveIntensity = 0.2 + intensity;
+            
+            if (showTrail) updateTrail(deviceGroup.position);
+            
+            const progress = ((frameIndex + 1) / sensorData.length) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+        }
+        
+        function goToFrame(frameIndex) {
+            if (frameIndex >= 0 && frameIndex < sensorData.length) {
+                currentFrame = frameIndex;
+                updateVisualization(currentFrame);
+            }
+        }
+        
+        function startAnimation() {
+            if (isPlaying) return;
+            if (!sensorData.length) {
+                document.getElementById('statusMsg').innerHTML = '❌ No data loaded! Upload a file first.';
+                document.getElementById('statusMsg').className = 'status error';
+                return;
+            }
+            isPlaying = true;
+            document.getElementById('playBtn').textContent = '⏸ Playing...';
+            document.getElementById('statusMsg').innerHTML = '▶️ Playing animation - Watch device move on floor!';
+            document.getElementById('statusMsg').className = 'status success';
+            
+            function step() {
+                if (!isPlaying) return;
+                updateVisualization(currentFrame);
+                currentFrame++;
+                if (currentFrame >= sensorData.length) { 
+                    currentFrame = 0; 
+                    if (showTrail) clearTrail();
+                }
+                animationInterval = setTimeout(() => requestAnimationFrame(step), frameInterval);
+            }
+            if (animationInterval) clearTimeout(animationInterval);
+            step();
+        }
+        
+        function pauseAnimation() {
+            isPlaying = false;
+            if (animationInterval) { clearTimeout(animationInterval); animationInterval = null; }
+            document.getElementById('playBtn').textContent = '▶ Play';
+            document.getElementById('statusMsg').innerHTML = '⏸ Paused';
+            document.getElementById('statusMsg').className = 'status';
+        }
+        
+        async function processFile(file) {
+            if (!file) return;
+            if (fileProcessed) return;
+            fileProcessed = true;
+            
+            pauseAnimation();
+            clearTrail();
+            
+            const statusDiv = document.getElementById('statusMsg');
+            statusDiv.innerHTML = `📖 Reading ${file.name}...`;
+            statusDiv.className = 'status';
+            
+            try {
+                const data = await file.arrayBuffer();
+                const workbook = XLSX.read(data);
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet);
+                
+                const newData = [];
+                for (const row of json) {
+                    let x = row.X || row.x || row['X'] || null;
+                    let y = row.Y || row.y || row['Y'] || null;
+                    let z = row.Z || row.z || row['Z'] || null;
+                    if (x !== null && y !== null && z !== null) {
+                        x = parseFloat(x); y = parseFloat(y); z = parseFloat(z);
+                        if (!isNaN(x) && !isNaN(y) && !isNaN(z)) newData.push({ x, y, z });
+                    }
+                }
+                
+                if (newData.length > 0) {
+                    sensorData = newData;
+                    currentFrame = 0;
+                    const firstRow = sensorData[0];
+                    const defaultAxis = getDominantAxis(firstRow.x, firstRow.y, firstRow.z);
+                    const defaultDirName = getDirectionName(defaultAxis);
+                    
+                    document.getElementById('defaultOrientation').innerHTML = `📍 First frame orientation: ${defaultDirName}`;
+                    statusDiv.innerHTML = `✅ Loaded ${sensorData.length} frames! Device shown on floor.`;
+                    statusDiv.className = 'status success';
+                    
+                    deviceGroup.position.set(0, restingY, 0);
+                    originalPosition = { x: 0, y: 0, z: 0 };
+                    
+                    updateVisualization(0);
+                    const timelineSlider = document.getElementById('timelineSlider');
+                    timelineSlider.max = sensorData.length - 1;
+                } else {
+                    statusDiv.innerHTML = '❌ No X,Y,Z columns found. Use columns named: X, Y, Z';
+                    statusDiv.className = 'status error';
+                }
+            } catch (err) {
+                statusDiv.innerHTML = `❌ Error: ${err.message}`;
+                statusDiv.className = 'status error';
+            } finally {
+                setTimeout(() => { fileProcessed = false; }, 500);
+            }
+        }
+        
+        // Event listeners
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const dropZone = document.getElementById('fileDropZone');
+        
+        uploadBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+        
+        dropZone.addEventListener('click', (e) => {
+            if (e.target === dropZone || e.target.classList.contains('file-input-area')) {
+                fileInput.click();
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                processFile(e.target.files[0]);
+                fileInput.value = '';
+            }
+        });
+        
+        dropZone.addEventListener('dragover', (e) => e.preventDefault());
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                processFile(e.dataTransfer.files[0]);
+            }
+        });
+        
+        document.getElementById('timelineSlider').addEventListener('input', (e) => {
+            if (sensorData.length) {
+                isScrubbing = true;
+                goToFrame(parseInt(e.target.value));
+                isScrubbing = false;
+            }
+        });
+        
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            frameInterval = parseInt(e.target.value);
+            const fps = Math.round(1000 / frameInterval);
+            document.getElementById('speedValue').textContent = frameInterval > 150 ? `Very Slow (${fps}fps)` : `Normal (${fps}fps)`;
+            if (isPlaying) { pauseAnimation(); startAnimation(); }
+        });
+        
+        document.getElementById('sensitivitySlider').addEventListener('input', (e) => {
+            movementSensitivity = parseFloat(e.target.value);
+            document.getElementById('sensitivityValue').textContent = `${movementSensitivity.toFixed(1)}x`;
+            if (sensorData.length) updateVisualization(currentFrame);
+        });
+        
+        document.getElementById('trailToggle').addEventListener('change', (e) => { showTrail = e.target.checked; if (!showTrail) clearTrail(); });
+        document.getElementById('resetTrailBtn').addEventListener('click', clearTrail);
+        document.getElementById('playBtn').addEventListener('click', startAnimation);
+        document.getElementById('pauseBtn').addEventListener('click', pauseAnimation);
+        document.getElementById('resetBtn').addEventListener('click', resetToStart);
+        
+        function render() {
+            particles.rotation.y += 0.002;
+            controls.update();
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+            requestAnimationFrame(render);
+        }
+        render();
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Default orientation: ROAMBEE facing SKY (lying on floor)
+        setDeviceOrientation('+Z');
+        deviceGroup.position.set(0, restingY, 0);        
+        console.log('✅ Device on floor surface - ROAMBEE logo facing SKY (+Z)');
+    </script>
+</body>
+</html>
