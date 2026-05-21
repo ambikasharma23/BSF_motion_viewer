@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>BeeSense Flex - vibration & location mapping</title>
+    <title>BeeSense Flex - Advanced Vibration & GPS Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -514,48 +514,96 @@
             return axis;
         }
         
-        function setDeviceOrientation(dominantAxis) {
-            if (!deviceGroup) return;
-            
-            switch(dominantAxis) {
-                case '+Z':
-                    deviceGroup.rotation.set(-Math.PI / 2, 0, 0);
-                    break;
-                case '-Z':
-                    deviceGroup.rotation.set(Math.PI / 2, 0, 0);
-                    break;
-                case '+X':
-                    deviceGroup.rotation.set(-Math.PI / 2, -Math.PI / 2, 0);
-                    break;    
-                case '-X':
-                    deviceGroup.rotation.set(-Math.PI / 2, Math.PI / 2, 0);
-                    break;    
-                case '+Y':
-                    deviceGroup.rotation.set(0, 0, 0);
-                    break;
-                case '-Y':
-                    deviceGroup.rotation.set(0, 0, Math.PI);
-                    break;
-                default:
-                    deviceGroup.rotation.set(0, 0, 0);
-            }
-            
-            let arrowDir = new THREE.Vector3(0, 0, 0);
-            let arrowColor = 0xffaa44;
-            switch(dominantAxis) {
-                case '+X': arrowDir.set(1, 0, 0); arrowColor = 0xcc3333; break;
-                case '-X': arrowDir.set(-1, 0, 0); arrowColor = 0xcc3333; break;
-                case '+Y': arrowDir.set(0, 1, 0); arrowColor = 0x33cc33; break;
-                case '-Y': arrowDir.set(0, -1, 0); arrowColor = 0x33cc33; break;
-                case '+Z': arrowDir.set(0, 0, 1); arrowColor = 0x3333cc; break;
-                case '-Z': arrowDir.set(0, 0, -1); arrowColor = 0x3333cc; break;
-            }
-            if (deviceGroup.userData && deviceGroup.userData.arrowHelper) {
-                deviceGroup.userData.arrowHelper.setDirection(arrowDir.clone().normalize());
-                deviceGroup.userData.arrowHelper.setColor(arrowColor);
-            }
-        }
-        
+     function setDeviceOrientation(dominantAxis) {
+
+    switch(dominantAxis) {
+
+        case '+Z':
+            // Flat on floor
+            deviceGroup.rotation.set(-Math.PI / 2, 0, 0);
+            break;
+
+        case '-Z':
+            // Flat upside down
+            deviceGroup.rotation.set(Math.PI / 2, 0, 0);
+            break;
+
+        case '+X':
+            // Flat rotated LEFT
+            deviceGroup.rotation.set(
+                -Math.PI / 2,
+                -Math.PI / 2,
+                0
+            );
+            break;
+
+        case '-X':
+            // Flat rotated RIGHT
+            deviceGroup.rotation.set(
+                -Math.PI / 2,
+                Math.PI / 2,
+                0
+            );
+            break;
+
+        case '+Y':
+            // Vertical upright
+            deviceGroup.rotation.set(0, 0, 0);
+            break;
+
+        case '-Y':
+            // Vertical upside down
+            deviceGroup.rotation.set(
+                0,
+                0,
+                Math.PI
+            );
+            break;
+    }}
+
+    // Arrow direction
+//     let arrowDir = new THREE.Vector3(0, 0, 1);
+//     let arrowColor = 0xffaa44;
+
+//     switch(dominantAxis) {
+
+//         case '+X':
+//             arrowDir.set(1, 0, 0);
+//             arrowColor = 0xff3333;
+//             break;
+
+//         case '-X':
+//             arrowDir.set(-1, 0, 0);
+//             arrowColor = 0xff3333;
+//             break;
+
+//         case '+Y':
+//             arrowDir.set(0, 1, 0);
+//             arrowColor = 0x33cc33;
+//             break;
+
+//         case '-Y':
+//             arrowDir.set(0, -1, 0);
+//             arrowColor = 0x33cc33;
+//             break;
+
+//         case '+Z':
+//             arrowDir.set(0, 0, 1);
+//             arrowColor = 0x3333ff;
+//             break;
+
+//         case '-Z':
+//             arrowDir.set(0, 0, -1);
+//             arrowColor = 0x3333ff;
+//             break;
+//     }
+
+//     deviceGroup.userData.arrowHelper.setDirection(
+//         arrowDir.clone().normalize()
+//     );
+
+//     deviceGroup.userData.arrowHelper.setColor(arrowColor);
+// }        
         function initMap() {
             map = L.map('map').setView([20, 0], 2);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -872,26 +920,173 @@
             ledLight.position.set(0.5, 0.65, 0.18);
             deviceGroup.add(ledLight);
             
-            const arrowHelper = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0.8, 0.3, 0), 0.9, 0xcc3333, 0.5, 0.3);
-            deviceGroup.add(arrowHelper);
-            deviceGroup.userData = { arrowHelper };
+            // const arrowHelper = new THREE.ArrowHelper(
+            //     new THREE.Vector3(0, 0, 1),
+            //     new THREE.Vector3(0, 0, 0),
+            //     1.0,
+            //     0x3333ff,
+            //     0.3,
+            //     0.2
+            // );
+            // deviceGroup.add(arrowHelper);
+            // deviceGroup.userData = { arrowHelper };
             
             // Axis lines
-            const xLineMat = new THREE.LineBasicMaterial({ color: 0xcc3333 });
-            const xPoints = [new THREE.Vector3(-2.2, 0, 0), new THREE.Vector3(2.2, 0, 0)];
-            const xLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(xPoints), xLineMat);
-            scene.add(xLine);
+            // X Axis (RED)
+const xMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
+
+const xPoints = [
+    new THREE.Vector3(-2, 0, 0),
+    new THREE.Vector3(2, 0, 0)
+];
+
+const xLine = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(xPoints),
+    xMat
+);
+
+scene.add(xLine);
+
+// X arrowheads
+scene.add(new THREE.ArrowHelper(
+    new THREE.Vector3(1,0,0),
+    new THREE.Vector3(1.7,0,0),
+    0.3,
+    0xff0000,
+    0.15,
+    0.08
+));
+
+scene.add(new THREE.ArrowHelper(
+    new THREE.Vector3(-1,0,0),
+    new THREE.Vector3(-1.7,0,0),
+    0.3,
+    0xff0000,
+    0.15,
+    0.08
+));
+
+
+// Y Axis (GREEN)
+const yMat = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+
+const yPoints = [
+    new THREE.Vector3(0,-2,0),
+    new THREE.Vector3(0,2,0)
+];
+
+const yLine = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(yPoints),
+    yMat
+);
+
+scene.add(yLine);
+
+// Y arrowheads
+scene.add(new THREE.ArrowHelper(
+    new THREE.Vector3(0,1,0),
+    new THREE.Vector3(0,1.7,0),
+    0.3,
+    0x00ff00,
+    0.15,
+    0.08
+));
+
+scene.add(new THREE.ArrowHelper(
+    new THREE.Vector3(0,-1,0),
+    new THREE.Vector3(0,-1.7,0),
+    0.3,
+    0x00ff00,
+    0.15,
+    0.08
+));
+
+
+// Z Axis (BLUE)
+const zMat = new THREE.LineBasicMaterial({ color: 0x0000ff });
+
+const zPoints = [
+    new THREE.Vector3(0,0,-2),
+    new THREE.Vector3(0,0,2)
+];
+
+const zLine = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(zPoints),
+    zMat
+);
+
+scene.add(zLine);
+
+// Z arrowheads
+scene.add(new THREE.ArrowHelper(
+    new THREE.Vector3(0,0,1),
+    new THREE.Vector3(0,0,1.7),
+    0.3,
+    0x0000ff,
+    0.15,
+    0.08
+));
+
+scene.add(new THREE.ArrowHelper(
+    new THREE.Vector3(0,0,-1),
+    new THREE.Vector3(0,0,-1.7),
+    0.3,
+    0x0000ff,
+    0.15,
+    0.08
+));
             
-            const yLineMat = new THREE.LineBasicMaterial({ color: 0x33cc33 });
-            const yPoints = [new THREE.Vector3(0, -1.8, 0), new THREE.Vector3(0, 1.8, 0)];
-            const yLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(yPoints), yLineMat);
-            scene.add(yLine);
-            
-            const zLineMat = new THREE.LineBasicMaterial({ color: 0x3333cc });
-            const zPoints = [new THREE.Vector3(0, 0, -1.8), new THREE.Vector3(0, 0, 1.8)];
-            const zLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(zPoints), zLineMat);
-            scene.add(zLine);
-            
+           // ===== AXIS LABELS =====
+
+function createTextSprite(text, color) {
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 128;
+
+    const ctx = canvas.getContext('2d');
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = 'Bold 52px Arial';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText(text, canvas.width / 2, 70);
+
+    const texture = new THREE.CanvasTexture(canvas);
+
+    const material = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true
+    });
+
+    const sprite = new THREE.Sprite(material);
+
+    sprite.scale.set(0.7, 0.35, 1);
+
+    return sprite;
+}
+
+
+// X LABEL
+const xLabel = createTextSprite('X', '#ff0000');
+xLabel.position.set(2.4, 0, 0);
+scene.add(xLabel);
+
+
+// Y LABEL
+const zLabel = createTextSprite('Z', '#00cc00');
+zLabel.position.set(0, 2.4, 0);
+scene.add(zLabel);
+
+
+// Z LABEL
+const yLabel = createTextSprite('Y', '#0000ff');
+yLabel.position.set(0, 0, 2.4);
+scene.add(yLabel);
+
+
+
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
             const dirLight = new THREE.DirectionalLight(0xffffff, 1);
