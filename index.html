@@ -78,6 +78,17 @@
             margin: 8px 0;
             flex-wrap: wrap;
         }
+                /* DEMO Section Label */
+        .demo-section-label {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffaa44;
+            border-left: 3px solid #ffaa44;
+            padding-left: 8px;
+            margin: 12px 0 8px 0;
+        }
         
         .demo-btn {
             flex: 1;
@@ -425,6 +436,10 @@
         </div>
         <p style="font-size: 10px; opacity: 0.7; margin-bottom: 10px;">Select demo or upload CSV with 'msg' column</p>
         
+
+        <!-- DEMO Section Label -->
+        <div class="demo-section-label">DEMO:</div>
+
         <!-- Demo Buttons -->
         <div class="demo-buttons">
             <button class="demo-btn orientation" id="orientationDemoBtn">🔄 Orientation Change</button>
@@ -503,72 +518,36 @@
         // ============================================================
         
         // BUTTON 1: ORIENTATION CHANGE DATA
-        const orientationChangeData = [{datetime: "20251122051717", x: 0.004, y: 0.04, z: -1.002, lat: 49.637836, lng: 6.22509, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122053217", x: 0.018, y: 0.036, z: -0.982, lat: 49.636196, lng: 6.24193, address: "Rue de Senningen, 5290 Neuhäusgen Niederanven, Luxembourg"},
-{datetime: "20251122054717", x: 0.054, y: 0.036, z: -0.992, lat: 49.636196, lng: 6.24193, address: "Rue de Senningen, 5290 Neuhäusgen Niederanven, Luxembourg"},
-{datetime: "20251122060217", x: 0.054, y: 0.036, z: -0.992, lat: 49.636803, lng: 6.223688, address: "J6QF+25, Niederanven, Luxembourg"},
-{datetime: "20251122080217", x: 0.054, y: 0.036, z: -0.992, lat: 49.638563, lng: 6.227571, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122081717", x: 0.054, y: 0.036, z: -0.992, lat: 49.628469, lng: 6.230313, address: "Route Sans Nom, Senningen Niederanven, Luxembourg"},
-{datetime: "20251122083217", x: 0.054, y: 0.036, z: -0.992, lat: 49.623894, lng: 6.235134, address: "2 Kiischtewee, 5290 Neihaischen Schëtter, Luxembourg"},
-{datetime: "20251122084717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63099958711577, lng: 6.231784898733076, address: "8 Rue de la Carrière, 5290 Neuhäusgen Schuttrange, Luxembourg"},
-{datetime: "20251122090217", x: 0.054, y: 0.036, z: -0.992, lat: 49.635942082140986, lng: 6.230018483255776, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122091717", x: 0.054, y: 0.036, z: -0.992, lat: 49.6330265456884, lng: 6.230536677939773, address: "Parishaff, 6961 Niederanven, Luxembourg"},
-{datetime: "20251122093217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63427767908209, lng: 6.230073490037475, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122094717", x: 0.954, y: 0.036, z: -0.042, lat: 49.63591846954247, lng: 6.229995757003349, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122110217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63579089738032, lng: 6.225663647777322, address: "J6QF+25, Niederanven, Luxembourg"},
-{datetime: "20251122111717", x: -0.002, y: 0.056, z: -0.998, lat: 49.6351867686666, lng: 6.229452037529483, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122113217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63755864017833, lng: 6.224483415083981, address: "J6QF+25, Niederanven, Luxembourg"},
-{datetime: "20251122114717", x: 0.054, y: 0.036, z: -0.992, lat: 49.635823374756065, lng: 6.228230181825481, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122120217", x: 0.036, y: 0.016, z: -1.038, lat: 49.635952013525944, lng: 6.228196720957424, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122121717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63573849897628, lng: 6.228254261442108, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122123217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63659589803389, lng: 6.228041548212908, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122124717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63842777552944, lng: 6.227595408749199, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122130217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63146748685699, lng: 6.232158474049705, address: "Rue de Senningen, 5290 Neuhäusgen Niederanven, Luxembourg"},
-{datetime: "20251122131717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63570379683112, lng: 6.228925071804784, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122133217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63645317735914, lng: 6.22629896303421, address: "J6QF+25, Niederanven, Luxembourg"},
-{datetime: "20251122134717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63836805897292, lng: 6.227606187911025, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122140217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63733358, lng: 6.2259868, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122141717", x: 0.054, y: -0.936, z: -0.092, lat: 49.63847811448142, lng: 6.227586322295772, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122143217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63786707795233, lng: 6.224376229229033, address: "J6QF+25, Niederanven, Luxembourg"},
-{datetime: "20251122144717", x: 0.054, y: 0.036, z: -0.992, lat: 49.62923700920312, lng: 6.233830266333974, address: "8 Rue de la Carrière, 5290 Neuhäusgen Schuttrange, Luxembourg"},
-{datetime: "20251122150217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63581812068109, lng: 6.228230824824272, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122151717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63767406, lng: 6.22562631, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122153217", x: 0.054, y: 0.036, z: -0.992, lat: 49.638234926412196, lng: 6.2275757251601656, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122154717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63767406, lng: 6.22562631, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122160217", x: 0.054, y: 0.036, z: -0.992, lat: 49.6347249443936, lng: 6.231013522989191, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251122161717", x: 0.054, y: 0.036, z: -0.992, lat: 49.631997198396206, lng: 6.230326719279302, address: "Parishaff, 6961 Niederanven, Luxembourg"},
-{datetime: "20251123224712", x: 0.012, y: 0.066, z: -0.94, lat: 49.639123, lng: 6.225386, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251123230212", x: -0.014, y: 0.08, z: -0.964, lat: 49.638885, lng: 6.225311, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251123231712", x: 0.054, y: 0.036, z: -0.992, lat: 49.638931, lng: 6.23057, address: "Parking, 6961 Niederanven, Luxembourg"},
-{datetime: "20251124044711", x: 0.054, y: 0.036, z: -0.992, lat: 49.639056, lng: 6.225218, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+        const orientationChangeData = [
+
 {datetime: "20251124050211", x: 0.054, y: 0.036, z: -0.992, lat: 49.639925, lng: 6.225006, address: "1 Parishaff, 2315 Senningerberg Niederanven, Luxembourg"},
 {datetime: "20251124051711", x: 0.054, y: 0.036, z: -0.992, lat: 49.639235, lng: 6.225373, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
-{datetime: "20251124064711", x: 0.054, y: 0.036, z: -0.992, lat: 49.639293, lng: 6.22554, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251124064711", x: 0.054, y: 0.036, z: 0.992, lat: 49.639293, lng: 6.22554, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
 {datetime: "20251124070211", x: 0.054, y: 0.036, z: -0.992, lat: 49.638805, lng: 6.229731, address: "Parking, 6961 Niederanven, Luxembourg"},
-{datetime: "20251124071711", x: 0.054, y: 0.036, z: -0.992, lat: 49.73367751042957, lng: 6.099586070384222, address: "Rte du N, 7432 Gosseldange Mersch, Luxembourg"},
+{datetime: "20251124071711", x: 0.154, y: 0.036, z: 0.892, lat: 49.73367751042957, lng: 6.099586070384222, address: "Rte du N, 7432 Gosseldange Mersch, Luxembourg"},
 {datetime: "20251124073211", x: -0.048, y: 0.138, z: -0.994, lat: 49.87126881, lng: 6.13040263, address: "35 Rue Fridhaff, 9148 Ierpeldeng op der Sauer, Luxembourg"},
 {datetime: "20251124074711", x: 0.054, y: 0.036, z: -0.992, lat: 49.989938, lng: 6.088513, address: "SCHINKER, Ennert Schinker, 9841 Parc Hosingen, Luxembourg"},
 {datetime: "20251124080211", x: 0.054, y: 0.036, z: -0.992, lat: 50.098193, lng: 6.086501, address: "97 Hauptstrooss, 9753 Heinerscheid Clerf, Luxembourg"},
 {datetime: "20251124081711", x: 0.054, y: 0.036, z: -0.992, lat: 50.177751, lng: 6.064318, address: "LENGELER Zollamt, 4790 Burg-Reuland, Belgium"},
-{datetime: "20251124083211", x: 0.054, y: 0.036, z: 0.992, lat: 50.286541, lng: 6.104453, address: "A27, 4784 Saint-Vith, Belgium"},
+{datetime: "20251124083211", x: 0.154, y: 0.036, z: 0.892, lat: 50.286541, lng: 6.104453, address: "A27, 4784 Saint-Vith, Belgium"},
 {datetime: "20251124084711", x: 0.054, y: 0.036, z: -0.992, lat: 50.434171, lng: 6.007778, address: "A27, 4960 Malmedy, Belgium"},
 {datetime: "20251124090212", x: 0.054, y: 0.036, z: -0.992, lat: 50.558846, lng: 5.858936, address: "A27, 4910 Theux, Belgium"},
 {datetime: "20251124091712", x: 0.054, y: 0.036, z: -0.992, lat: 50.641143, lng: 5.73153, address: "Rue du Moustier 18, 4633 Soumagne, Belgium"},
 {datetime: "20251124093212", x: 0.054, y: 0.036, z: -0.992, lat: 50.738478, lng: 5.578863, address: "A13, 4690 Bassenge, Belgium"},
-{datetime: "20251124094712", x: 0.054, y: 0.036, z: -0.992, lat: 50.893461, lng: 5.420391, address: "Watertorenstraat 12, 3590 Diepenbeek, Belgium"},
+{datetime: "20251124094712", x: 0.054, y: 0.036, z: 0.992, lat: 50.893461, lng: 5.420391, address: "Watertorenstraat 12, 3590 Diepenbeek, Belgium"},
 {datetime: "20251124100212", x: 0.054, y: 0.036, z: -0.992, lat: 50.971786, lng: 5.491343, address: "Kuilenstraat 50, 3600 Genk, Belgium"},
 {datetime: "20251124144711", x: 0.054, y: 0.036, z: -0.992, lat: 50.979626, lng: 5.471626, address: "Brikkenovenstraat 18, 3600 Genk, Belgium"},
 {datetime: "20251124150210", x: 0.054, y: 0.036, z: -0.992, lat: 50.982111, lng: 5.49303, address: "Esserslaan, 3600 Genk, Belgium"},
-{datetime: "20251124151710", x: 0.054, y: 0.036, z: 0.992, lat: 51.011146, lng: 5.314526, address: "E314, 3550 Heusden-Zolder, Belgium"},
+{datetime: "20251124151710", x: 0.054, y: 0.036, z: -0.992, lat: 51.011146, lng: 5.314526, address: "E314, 3550 Heusden-Zolder, Belgium"},
 {datetime: "20251124153210", x: 0.054, y: 0.036, z: -0.992, lat: 50.949201, lng: 5.053478, address: "A2, 3290 Diest, Belgium"},
 {datetime: "20251124154710", x: 0.954, y: 0.036, z: -0.092, lat: 50.948953, lng: 4.783708, address: "E314, 3111 Rotselaar, Belgium"},
 {datetime: "20251124160210", x: 0.054, y: 0.036, z: -0.992, lat: 50.867115, lng: 4.574363, address: "E40, 3078 Kortenberg, Belgium"},
-{datetime: "20251124161710", x: 0.054, y: 0.036, z: -0.992, lat: 50.874476, lng: 4.465228, address: "Bosrankstraat 7, 1930 Zaventem, Belgium"},
+{datetime: "20251124161710", x: 0.154, y: 0.036, z: -0.892, lat: 50.874476, lng: 4.465228, address: "Bosrankstraat 7, 1930 Zaventem, Belgium"},
 {datetime: "20251124163211", x: 0.054, y: 0.036, z: -0.992, lat: 50.900845, lng: 4.438246, address: "Diegem Ring, 1831 Machelen, Belgium"},
 {datetime: "20251124164710", x: 0.054, y: 0.036, z: -0.992, lat: 50.907865, lng: 4.45423, address: "Bedrijvenzone Machelen Cargo 729/2, 1830 Machelen, Belgium"},
 {datetime: "20251124170210", x: 0.054, y: 0.036, z: -0.992, lat: 50.904868, lng: 4.455391, address: "Skylink nv, Brucargo 705, 1931 Machelen, Belgium"},
 {datetime: "20251124171710", x: 0.054, y: 0.036, z: -0.992, lat: 50.906778, lng: 4.453635, address: "Bedrijvenzone Machelen Cargo 731, 1830 Machelen, Belgium"},
-{datetime: "20251124173210", x: 0.054, y: 0.036, z: -0.992, lat: 50.90702, lng: 4.453503, address: "Bedrijvenzone Machelen Cargo 731, 1830 Machelen, Belgium"},
+{datetime: "20251124173210", x: 0.154, y: 0.036, z: -0.892, lat: 50.90702, lng: 4.453503, address: "Bedrijvenzone Machelen Cargo 731, 1830 Machelen, Belgium"},
 {datetime: "20251124174710", x: 0.054, y: 0.036, z: -0.992, lat: 50.906911, lng: 4.453608, address: "Bedrijvenzone Machelen Cargo 731, 1830 Machelen, Belgium"},
 {datetime: "20251124180210", x: 0.054, y: 0.036, z: -0.992, lat: 50.90702, lng: 4.453715, address: "Bedrijvenzone Machelen Cargo 732, 1830 Machelen, Belgium"}];
             
