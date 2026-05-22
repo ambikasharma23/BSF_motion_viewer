@@ -72,6 +72,37 @@
             font-size: 8px;
         }
         
+        .demo-buttons {
+            display: flex;
+            gap: 6px;
+            margin: 8px 0;
+            flex-wrap: wrap;
+        }
+        
+        .demo-btn {
+            flex: 1;
+            padding: 8px 4px;
+            font-size: 11px;
+            background: #1a3a5c;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        
+        .demo-btn.active {
+            background: #2c7ed6;
+            box-shadow: 0 0 8px rgba(44,126,214,0.5);
+        }
+        
+        .demo-btn.orientation { background: #FFA500; color: #333; }
+        .demo-btn.impact { background: #8B0000; }
+        .demo-btn.both { background: #00BFFF; }
+        
+        .demo-btn:hover { opacity: 0.8; transform: translateY(-1px); }
+        
         .file-input-area {
             background: rgba(30, 40, 60, 0.8);
             border: 1.5px dashed #4a9eff;
@@ -372,6 +403,8 @@
         @media (max-width: 768px) {
             .control-widget { width: 300px; right: 10px; top: 10px; padding: 10px; max-height: 85vh; }
             .device-3d-container { width: 200px; height: 200px; bottom: 10px; left: 10px; }
+            .demo-buttons { gap: 4px; }
+            .demo-btn { font-size: 9px; padding: 6px 2px; }
         }
     </style>
 </head>
@@ -390,7 +423,14 @@
             <h3>BeeSense Flex</h3>
             <span class="device-badge" id="beeNameBadge">Vibration Viewer</span>
         </div>
-        <p style="font-size: 10px; opacity: 0.7; margin-bottom: 10px;">Upload CSV with 'msg' column containing JSON data</p>
+        <p style="font-size: 10px; opacity: 0.7; margin-bottom: 10px;">Select demo or upload CSV with 'msg' column</p>
+        
+        <!-- Demo Buttons -->
+        <div class="demo-buttons">
+            <button class="demo-btn orientation" id="orientationDemoBtn">🔄 Orientation Change</button>
+            <button class="demo-btn impact" id="impactDemoBtn">💥 Impact Detected</button>
+            <button class="demo-btn both" id="bothDemoBtn">⚡ Both (Impact + Orientation)</button>
+        </div>
         
         <div class="file-input-area" id="fileDropZone">
             <div class="upload-label" id="uploadBtn">📂 Choose CSV/Excel</div>
@@ -417,8 +457,6 @@
             <div class="legend-item"><div class="legend-dot black"></div><span>Maximum Impact</span></div>
         </div>
         
-        <!-- Frame counter explicitly added to fix the null reference error -->
-                
         <div class="timeline-container">
             <div class="timeline-label">
                 <span>⏪ Timeline</span>
@@ -432,7 +470,6 @@
             <input type="range" id="speedSlider" min="200" max="1000" value="400" step="50">
         </div>
         
-               
         <div class="button-group">
             <button id="playBtn" class="primary">▶ Play</button>
             <button id="pauseBtn">⏸ Pause</button>
@@ -441,7 +478,7 @@
         </div>
         
         <div class="status" id="statusMsg">
-            📁 Upload log file to start
+            📁 Upload log file or click a demo button
         </div>
     </div>
 
@@ -460,13 +497,150 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import * as XLSX from 'xlsx';
         
+        // ============================================================
+        // 📝 HARDCODED DEMO DATA - EDIT YOUR DATA HERE
+        // Format: { datetime: "YYYYMMDDHHMMSS", x, y, z, lat, lng, address }
+        // ============================================================
+        
+        // BUTTON 1: ORIENTATION CHANGE DATA
+        const orientationChangeData = [{datetime: "20251122051717", x: 0.004, y: 0.04, z: -1.002, lat: 49.637836, lng: 6.22509, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122053217", x: 0.018, y: 0.036, z: -0.982, lat: 49.636196, lng: 6.24193, address: "Rue de Senningen, 5290 Neuhäusgen Niederanven, Luxembourg"},
+{datetime: "20251122054717", x: 0.054, y: 0.036, z: -0.992, lat: 49.636196, lng: 6.24193, address: "Rue de Senningen, 5290 Neuhäusgen Niederanven, Luxembourg"},
+{datetime: "20251122060217", x: 0.054, y: 0.036, z: -0.992, lat: 49.636803, lng: 6.223688, address: "J6QF+25, Niederanven, Luxembourg"},
+{datetime: "20251122080217", x: 0.054, y: 0.036, z: -0.992, lat: 49.638563, lng: 6.227571, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122081717", x: 0.054, y: 0.036, z: -0.992, lat: 49.628469, lng: 6.230313, address: "Route Sans Nom, Senningen Niederanven, Luxembourg"},
+{datetime: "20251122083217", x: 0.054, y: 0.036, z: -0.992, lat: 49.623894, lng: 6.235134, address: "2 Kiischtewee, 5290 Neihaischen Schëtter, Luxembourg"},
+{datetime: "20251122084717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63099958711577, lng: 6.231784898733076, address: "8 Rue de la Carrière, 5290 Neuhäusgen Schuttrange, Luxembourg"},
+{datetime: "20251122090217", x: 0.054, y: 0.036, z: -0.992, lat: 49.635942082140986, lng: 6.230018483255776, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122091717", x: 0.054, y: 0.036, z: -0.992, lat: 49.6330265456884, lng: 6.230536677939773, address: "Parishaff, 6961 Niederanven, Luxembourg"},
+{datetime: "20251122093217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63427767908209, lng: 6.230073490037475, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122094717", x: 0.954, y: 0.036, z: -0.042, lat: 49.63591846954247, lng: 6.229995757003349, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122110217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63579089738032, lng: 6.225663647777322, address: "J6QF+25, Niederanven, Luxembourg"},
+{datetime: "20251122111717", x: -0.002, y: 0.056, z: -0.998, lat: 49.6351867686666, lng: 6.229452037529483, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122113217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63755864017833, lng: 6.224483415083981, address: "J6QF+25, Niederanven, Luxembourg"},
+{datetime: "20251122114717", x: 0.054, y: 0.036, z: -0.992, lat: 49.635823374756065, lng: 6.228230181825481, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122120217", x: 0.036, y: 0.016, z: -1.038, lat: 49.635952013525944, lng: 6.228196720957424, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122121717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63573849897628, lng: 6.228254261442108, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122123217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63659589803389, lng: 6.228041548212908, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122124717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63842777552944, lng: 6.227595408749199, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122130217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63146748685699, lng: 6.232158474049705, address: "Rue de Senningen, 5290 Neuhäusgen Niederanven, Luxembourg"},
+{datetime: "20251122131717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63570379683112, lng: 6.228925071804784, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122133217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63645317735914, lng: 6.22629896303421, address: "J6QF+25, Niederanven, Luxembourg"},
+{datetime: "20251122134717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63836805897292, lng: 6.227606187911025, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122140217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63733358, lng: 6.2259868, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122141717", x: 0.054, y: -0.936, z: -0.092, lat: 49.63847811448142, lng: 6.227586322295772, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122143217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63786707795233, lng: 6.224376229229033, address: "J6QF+25, Niederanven, Luxembourg"},
+{datetime: "20251122144717", x: 0.054, y: 0.036, z: -0.992, lat: 49.62923700920312, lng: 6.233830266333974, address: "8 Rue de la Carrière, 5290 Neuhäusgen Schuttrange, Luxembourg"},
+{datetime: "20251122150217", x: 0.054, y: 0.036, z: -0.992, lat: 49.63581812068109, lng: 6.228230824824272, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122151717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63767406, lng: 6.22562631, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122153217", x: 0.054, y: 0.036, z: -0.992, lat: 49.638234926412196, lng: 6.2275757251601656, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122154717", x: 0.054, y: 0.036, z: -0.992, lat: 49.63767406, lng: 6.22562631, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122160217", x: 0.054, y: 0.036, z: -0.992, lat: 49.6347249443936, lng: 6.231013522989191, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251122161717", x: 0.054, y: 0.036, z: -0.992, lat: 49.631997198396206, lng: 6.230326719279302, address: "Parishaff, 6961 Niederanven, Luxembourg"},
+{datetime: "20251123224712", x: 0.012, y: 0.066, z: -0.94, lat: 49.639123, lng: 6.225386, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251123230212", x: -0.014, y: 0.08, z: -0.964, lat: 49.638885, lng: 6.225311, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251123231712", x: 0.054, y: 0.036, z: -0.992, lat: 49.638931, lng: 6.23057, address: "Parking, 6961 Niederanven, Luxembourg"},
+{datetime: "20251124044711", x: 0.054, y: 0.036, z: -0.992, lat: 49.639056, lng: 6.225218, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251124050211", x: 0.054, y: 0.036, z: -0.992, lat: 49.639925, lng: 6.225006, address: "1 Parishaff, 2315 Senningerberg Niederanven, Luxembourg"},
+{datetime: "20251124051711", x: 0.054, y: 0.036, z: -0.992, lat: 49.639235, lng: 6.225373, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251124064711", x: 0.054, y: 0.036, z: -0.992, lat: 49.639293, lng: 6.22554, address: "Luxcargo Handling, 2632 Niederanven, Luxembourg"},
+{datetime: "20251124070211", x: 0.054, y: 0.036, z: -0.992, lat: 49.638805, lng: 6.229731, address: "Parking, 6961 Niederanven, Luxembourg"},
+{datetime: "20251124071711", x: 0.054, y: 0.036, z: -0.992, lat: 49.73367751042957, lng: 6.099586070384222, address: "Rte du N, 7432 Gosseldange Mersch, Luxembourg"},
+{datetime: "20251124073211", x: -0.048, y: 0.138, z: -0.994, lat: 49.87126881, lng: 6.13040263, address: "35 Rue Fridhaff, 9148 Ierpeldeng op der Sauer, Luxembourg"},
+{datetime: "20251124074711", x: 0.054, y: 0.036, z: -0.992, lat: 49.989938, lng: 6.088513, address: "SCHINKER, Ennert Schinker, 9841 Parc Hosingen, Luxembourg"},
+{datetime: "20251124080211", x: 0.054, y: 0.036, z: -0.992, lat: 50.098193, lng: 6.086501, address: "97 Hauptstrooss, 9753 Heinerscheid Clerf, Luxembourg"},
+{datetime: "20251124081711", x: 0.054, y: 0.036, z: -0.992, lat: 50.177751, lng: 6.064318, address: "LENGELER Zollamt, 4790 Burg-Reuland, Belgium"},
+{datetime: "20251124083211", x: 0.054, y: 0.036, z: 0.992, lat: 50.286541, lng: 6.104453, address: "A27, 4784 Saint-Vith, Belgium"},
+{datetime: "20251124084711", x: 0.054, y: 0.036, z: -0.992, lat: 50.434171, lng: 6.007778, address: "A27, 4960 Malmedy, Belgium"},
+{datetime: "20251124090212", x: 0.054, y: 0.036, z: -0.992, lat: 50.558846, lng: 5.858936, address: "A27, 4910 Theux, Belgium"},
+{datetime: "20251124091712", x: 0.054, y: 0.036, z: -0.992, lat: 50.641143, lng: 5.73153, address: "Rue du Moustier 18, 4633 Soumagne, Belgium"},
+{datetime: "20251124093212", x: 0.054, y: 0.036, z: -0.992, lat: 50.738478, lng: 5.578863, address: "A13, 4690 Bassenge, Belgium"},
+{datetime: "20251124094712", x: 0.054, y: 0.036, z: -0.992, lat: 50.893461, lng: 5.420391, address: "Watertorenstraat 12, 3590 Diepenbeek, Belgium"},
+{datetime: "20251124100212", x: 0.054, y: 0.036, z: -0.992, lat: 50.971786, lng: 5.491343, address: "Kuilenstraat 50, 3600 Genk, Belgium"},
+{datetime: "20251124144711", x: 0.054, y: 0.036, z: -0.992, lat: 50.979626, lng: 5.471626, address: "Brikkenovenstraat 18, 3600 Genk, Belgium"},
+{datetime: "20251124150210", x: 0.054, y: 0.036, z: -0.992, lat: 50.982111, lng: 5.49303, address: "Esserslaan, 3600 Genk, Belgium"},
+{datetime: "20251124151710", x: 0.054, y: 0.036, z: 0.992, lat: 51.011146, lng: 5.314526, address: "E314, 3550 Heusden-Zolder, Belgium"},
+{datetime: "20251124153210", x: 0.054, y: 0.036, z: -0.992, lat: 50.949201, lng: 5.053478, address: "A2, 3290 Diest, Belgium"},
+{datetime: "20251124154710", x: 0.954, y: 0.036, z: -0.092, lat: 50.948953, lng: 4.783708, address: "E314, 3111 Rotselaar, Belgium"},
+{datetime: "20251124160210", x: 0.054, y: 0.036, z: -0.992, lat: 50.867115, lng: 4.574363, address: "E40, 3078 Kortenberg, Belgium"},
+{datetime: "20251124161710", x: 0.054, y: 0.036, z: -0.992, lat: 50.874476, lng: 4.465228, address: "Bosrankstraat 7, 1930 Zaventem, Belgium"},
+{datetime: "20251124163211", x: 0.054, y: 0.036, z: -0.992, lat: 50.900845, lng: 4.438246, address: "Diegem Ring, 1831 Machelen, Belgium"},
+{datetime: "20251124164710", x: 0.054, y: 0.036, z: -0.992, lat: 50.907865, lng: 4.45423, address: "Bedrijvenzone Machelen Cargo 729/2, 1830 Machelen, Belgium"},
+{datetime: "20251124170210", x: 0.054, y: 0.036, z: -0.992, lat: 50.904868, lng: 4.455391, address: "Skylink nv, Brucargo 705, 1931 Machelen, Belgium"},
+{datetime: "20251124171710", x: 0.054, y: 0.036, z: -0.992, lat: 50.906778, lng: 4.453635, address: "Bedrijvenzone Machelen Cargo 731, 1830 Machelen, Belgium"},
+{datetime: "20251124173210", x: 0.054, y: 0.036, z: -0.992, lat: 50.90702, lng: 4.453503, address: "Bedrijvenzone Machelen Cargo 731, 1830 Machelen, Belgium"},
+{datetime: "20251124174710", x: 0.054, y: 0.036, z: -0.992, lat: 50.906911, lng: 4.453608, address: "Bedrijvenzone Machelen Cargo 731, 1830 Machelen, Belgium"},
+{datetime: "20251124180210", x: 0.054, y: 0.036, z: -0.992, lat: 50.90702, lng: 4.453715, address: "Bedrijvenzone Machelen Cargo 732, 1830 Machelen, Belgium"}];
+            
+        // BUTTON 2: IMPACT DETECTED DATA
+        const impactDetectedData = [
+    { datetime: "20260520055948", x: 0.002, y: -0.026, z: 1.074, lat: 37.938859, lng: -77.457399, address: "10504 Ruther Glen Rd, Ruther Glen, VA 22546, USA" },
+    { datetime: "20260520060548", x: 0.002, y: -0.026, z: 1.174, lat: 38.14817, lng: -77.545508, address: "Jivard Ln, Spotsylvania Courthouse, VA 22551, USA" },
+    { datetime: "20260520061148", x: 0.002, y: -0.126, z: 1.074, lat: 38.05363087, lng: -77.50163968, address: "3F3X+F8 Cedon, VA, USA" },
+    { datetime: "20260520061748", x: 0.002, y: -0.026, z: 1.074, lat: 38.1422323, lng: -77.51069494, address: "6909 S Roxbury Mill Rd, Spotsylvania Courthouse, VA 22551, USA" },
+    { datetime: "20260520062348", x: 0.002, y: -0.026, z: 1.074, lat: 38.2268, lng: -77.49924, address: "5800 Southpoint Centre Blvd, Fredericksburg, VA 22407, USA" },
+    { datetime: "20260520062948", x: 0.002, y: -0.026, z: 1.074, lat: 38.31455807, lng: -77.50436346, address: "1060 Hospitality Ln, Fredericksburg, VA 22401, USA" },
+    { datetime: "20260520063548", x: 0.002, y: -0.026, z: 1.074, lat: 38.38104508, lng: -77.45895174, address: "9GJR+CC Falmouth, VA, USA" },
+    { datetime: "20260520064148", x: -0.186, y: 0.108, z: 1.786, lat: 38.48393358, lng: -77.3896934, address: "1320 Kings Crest Dr, Stafford, VA 22554, USA" },
+    { datetime: "20260520064748", x: 0.002, y: -0.026, z: 1.074, lat: 38.55607497, lng: -77.34104427, address: "4351 Inn St, Triangle, VA 22172, USA" },
+    { datetime: "20260520065348", x: 0.002, y: -0.026, z: 1.074, lat: 38.62829237, lng: -77.28757794, address: "15101 Potomac Town Pl, Woodbridge, VA 22191, USA" },
+    { datetime: "20260520065948", x: 0.102, y: -0.026, z: 1.074, lat: 38.67396865, lng: -77.18689526, address: "10639 Gunston Rd, Lorton, VA 22079, USA" },
+    { datetime: "20260520070548", x: 0.002, y: -0.026, z: 1.074, lat: 38.77999349, lng: -77.17738291, address: "Commerce St at Bowie Dr, Springfield, VA 22150, USA" },
+    { datetime: "20260520071148", x: 0.002, y: -0.026, z: 1.074, lat: 38.79494565, lng: -77.06034572, address: "QWVQ+XV Alexandria, VA, USA" },
+    { datetime: "20260520071748", x: 0.002, y: -0.026, z: 1.074, lat: 38.80572225, lng: -76.96521636, address: "6205 Kildare Ct, Fort Washington, MD 20744, USA" },
+    { datetime: "20260520072348", x: 0.002, y: -0.226, z: 1.574, lat: 38.84409974, lng: -76.8646055, address: "3250 Kaverton Rd, District Heights, MD 20747, USA" },
+    { datetime: "20260520072948", x: 0.002, y: -0.026, z: 1.074, lat: 38.92489859, lng: -76.85051266, address: "W4FX+XQ Glenarden, MD, USA" },
+    { datetime: "20260520073548", x: 0.002, y: -0.026, z: 1.074, lat: 39.00878967, lng: -76.902344, address: "9322 Edmonston Rd, Greenbelt, MD 20770, USA" },
+    { datetime: "20260520074148", x: 0.002, y: -0.026, z: 1.074, lat: 39.06209, lng: -76.917611, address: "336J+RX Konterra, MD, USA" },
+    { datetime: "20260520074748", x: 0.002, y: -0.026, z: 1.074, lat: 39.14042454, lng: -76.84605825, address: "8400 I-95, Laurel, MD 20723, USA" },
+    { datetime: "20260520075348", x: 0.002, y: -0.026, z: 1.074, lat: 39.19656968, lng: -76.76123906, address: "6500 Mansion Ln, Elkridge, MD 21075, USA" }
+];
+        
+        // BUTTON 3: BOTH (IMPACT + ORIENTATION) DATA
+        const bothData = [
+    { datetime: "20260508192521", x: -0.16, y: -0.512, z: 1.008, lat: 18.21168471, lng: 74.59577582, address: "Tandulwadi Rd, Katphal, Baramati, Maharashtra 413133, India" },
+    { datetime: "20260508202521", x: -0.176, y: -0.544, z: 0.832, lat: 18.20390971, lng: 74.5966967, address: "6H4W+82H, Baramati, Maharashtra 413133, India" },
+    { datetime: "20260508212521", x: -0.176, y: -0.512, z: 0.912, lat: 18.21539322, lng: 74.59769104, address: "6J82+J3V, Maharashtra Industrial Development Corporation Area, Baramati, Maharashtra 413133, India" },
+    { datetime: "20260508222521", x: -0.192, y: -0.496, z: 1.008, lat: 18.225865, lng: 74.577576, address: "6HGH+72J, MIDC, Baramati, Gojubavi, Maharashtra 413133, India" },
+    { datetime: "20260508232522", x: -0.208, y: -0.576, z: 0.88, lat: 18.20835659, lng: 74.58689582, address: "Tandulwadi Rd, Katphal, Baramati, Maharashtra 413133, India" },
+    { datetime: "20260509002521", x: -0.192, y: -0.528, z: 0.896, lat: 18.21948654, lng: 74.59065624, address: "6HCR+PG6, Sawantwadi, Maharashtra 413133, India" },
+    { datetime: "20260509012521", x: -0.192, y: -0.512, z: 1.12, lat: 18.22286393, lng: 74.58921575, address: "6HFR+F9W Takale Farm, near Baramati Airport, Gojubavi, Sawantwadi, Maharashtra 413133, India" },
+    { datetime: "20260509022521", x: -0.032, y: -0.544, z: 0.896, lat: 18.22451628, lng: 74.58206756, address: "NH 965G, Gojubavi, Maharashtra 413133, India" },
+    { datetime: "20260509032522", x: 1.072, y: -0.08, z: 0.192, lat: 18.21926713, lng: 74.60302761, address: "6J93+FM6, Maharashtra Industrial Development Corporation Area, Bandalwadi, Maharashtra 413133, India" },
+    { datetime: "20260509042521", x: 0.832, y: -0.08, z: 0.736, lat: 18.2170299, lng: 74.60192432, address: "E/198/2, Maharashtra Industrial Development Corporation Area, Katphal, Bandalwadi, Maharashtra 413133, India" },
+    { datetime: "20260509052521", x: 0.176, y: 0.016, z: -0.864, lat: 18.21490181, lng: 74.60180418, address: "E/198/1, Maharashtra Industrial Development Corporation Area, Katphal, Baramati, Maharashtra 413133, India" },
+    { datetime: "20260509062521", x: 0.192, y: -0.032, z: -0.96, lat: 18.22032905, lng: 74.59904421, address: "6J92+P3Q, Maharashtra Industrial Development Corporation Area, Bandalwadi, Maharashtra 413133, India" },
+    { datetime: "20260509072521", x: 0.096, y: -0.144, z: -0.816, lat: 18.36345064, lng: 74.49241061, address: "Unnamed Road, Maharashtra 412219, India" },
+    { datetime: "20260509082518", x: -0.032, y: 0.128, z: 0.624, lat: 18.61459451, lng: 74.60414438, address: "JJ83+4GC, Gorewasti, Madhewadgaon, Madhe Vadgaon, Maharashtra 413726, India" },
+    { datetime: "20260509092518", x: -0.704, y: -0.128, z: -0.16, lat: 18.79316539, lng: 74.65904436, address: "QMV5+FJ, Kolgaon, Maharashtra 413728, India" },
+    { datetime: "20260509102518", x: -0.768, y: -0.128, z: 0.144, lat: 19.07402308, lng: 74.69537917, address: "3MFW+G66, Jagdamba Colony, Kedgaon, Ahilyanagar, Maharashtra 414005, India" },
+    { datetime: "20260509112518", x: -0.768, y: 0, z: 0.08, lat: 19.2883987, lng: 74.65953133, address: "Shop No 1, Nagar, Manmad Rd, Nandgaon, Maharashtra 413704, India" },
+    { datetime: "20260509122518", x: -1.344, y: 0.016, z: -0.688, lat: 19.52616335, lng: 74.53481951, address: "Unnamed Road, Kolhar Kh, Maharashtra 413710, India" },
+    { datetime: "20260509132518", x: -0.848, y: -0.128, z: 0, lat: 19.78830165, lng: 74.46786483, address: "QFQ9+89M, Kopargaon - Shirdi - Ahilyanagar - Pune Hwy, nr. Hotel Aamantran, Nighoj, Maharashtra 423109, India" },
+    { datetime: "20260509142518", x: 0.064, y: -0.112, z: -0.96, lat: 19.98715833, lng: 74.49085333, address: "XFPR+PMJ, MH SH 7, Anchalgaon, Pimpalgaon Jalal, Maharashtra 423401, India" },
+    { datetime: "20260509152518", x: 0.048, y: -0.048, z: -0.976, lat: 19.986506, lng: 74.490784, address: "XFPR+PMJ, MH SH 7, Anchalgaon, Pimpalgaon Jalal, Maharashtra 423401, India" },
+    { datetime: "20260509162518", x: 0.048, y: -0.048, z: -1.024, lat: 20.15041, lng: 74.447083, address: "4CXW+VQ6, Kasarkhede, Maharashtra 423401, India" },
+    { datetime: "20260509172518", x: -0.016, y: 0.016, z: -0.832, lat: 20.380301, lng: 74.476138, address: "Unnamed Road, Chondhi, Maharashtra 423208, India" },
+    { datetime: "20260509182518", x: 0.08, y: -0.08, z: -0.752, lat: 20.66375286, lng: 74.67590773, address: "MM7G+G9F, Zodge, Maharashtra 423205, India" },
+    { datetime: "20260509192518", x: 0.176, y: -0.096, z: -1.168, lat: 20.87859407, lng: 74.78854009, address: "VQHQ+G5F, Dhule, Maharashtra 424311, India" },
+    { datetime: "20260509202517", x: 0.064, y: 0.176, z: -0.896, lat: 21.27182865, lng: 74.84774571, address: "AH47, Dabhashi, Maharashtra 425405, India" },
+    { datetime: "20260509212517", x: 0.176, y: -0.048, z: -0.88, lat: 21.453636, lng: 74.991867, address: "FX3Q+JV8, Sangvi, Maharashtra 425405, India" },
+    { datetime: "20260510012517", x: 0.048, y: -0.096, z: -1.056, lat: 21.76516926, lng: 75.15978932, address: "AH47, Salikalan, Madhya Pradesh 451666, India" },
+    { datetime: "20260510022517", x: 0.032, y: -0.08, z: -0.864, lat: 21.943546, lng: 75.275717, address: "W7VF+CH4, Relwa Khurd, Madhya Pradesh 451449, India" },
+    { datetime: "20260510032517", x: 0, y: -0.112, z: -0.944, lat: 21.9379311, lng: 75.26935345, address: "W7QC+G3, Sangwi, Madhya Pradesh 451449, India" },
+    { datetime: "20260510042517", x: 0.096, y: -0.128, z: -1.2, lat: 22.23982525, lng: 75.46830229, address: "NH 347C, Eklara Khurd, Madhya Pradesh 454552, India" }
+];
+        
+        // ============================================================
+        // CORE APPLICATION LOGIC (UNCHANGED)
+        // ============================================================
+        
         // Data structures
         let sensorData = [];
         let currentFrame = 0;
         let isPlaying = false;
         let animationInterval = null;
         let frameInterval = 400;
-        // let movementSensitivity = 2.5; // kept for future use
         let map = null;
         let marker = null;
         let allMarkers = [];
@@ -484,8 +658,6 @@
         
         const deviceCanvas = document.getElementById('deviceCanvas');
         
-        // DOM element references with safe checks
-        // const frameCounterElement = document.getElementById('frameCounter');
         const timelineFrameInfo = document.getElementById('timelineFrameInfo');
         const timelineSlider = document.getElementById('timelineSlider');
         const currentAxisLabelSpan = document.getElementById('currentAxisLabel');
@@ -514,96 +686,17 @@
             return axis;
         }
         
-     function setDeviceOrientation(dominantAxis) {
-
-    switch(dominantAxis) {
-
-        case '+Z':
-            // Flat on floor
-            deviceGroup.rotation.set(-Math.PI / 2, 0, 0);
-            break;
-
-        case '-Z':
-            // Flat upside down
-            deviceGroup.rotation.set(Math.PI / 2, 0, 0);
-            break;
-
-        case '+X':
-            // Flat rotated LEFT
-            deviceGroup.rotation.set(
-                -Math.PI / 2,
-                -Math.PI / 2,
-                0
-            );
-            break;
-
-        case '-X':
-            // Flat rotated RIGHT
-            deviceGroup.rotation.set(
-                -Math.PI / 2,
-                Math.PI / 2,
-                0
-            );
-            break;
-
-        case '+Y':
-            // Vertical upright
-            deviceGroup.rotation.set(0, 0, 0);
-            break;
-
-        case '-Y':
-            // Vertical upside down
-            deviceGroup.rotation.set(
-                0,
-                0,
-                Math.PI
-            );
-            break;
-    }}
-
-    // Arrow direction
-//     let arrowDir = new THREE.Vector3(0, 0, 1);
-//     let arrowColor = 0xffaa44;
-
-//     switch(dominantAxis) {
-
-//         case '+X':
-//             arrowDir.set(1, 0, 0);
-//             arrowColor = 0xff3333;
-//             break;
-
-//         case '-X':
-//             arrowDir.set(-1, 0, 0);
-//             arrowColor = 0xff3333;
-//             break;
-
-//         case '+Y':
-//             arrowDir.set(0, 1, 0);
-//             arrowColor = 0x33cc33;
-//             break;
-
-//         case '-Y':
-//             arrowDir.set(0, -1, 0);
-//             arrowColor = 0x33cc33;
-//             break;
-
-//         case '+Z':
-//             arrowDir.set(0, 0, 1);
-//             arrowColor = 0x3333ff;
-//             break;
-
-//         case '-Z':
-//             arrowDir.set(0, 0, -1);
-//             arrowColor = 0x3333ff;
-//             break;
-//     }
-
-//     deviceGroup.userData.arrowHelper.setDirection(
-//         arrowDir.clone().normalize()
-//     );
-
-//     deviceGroup.userData.arrowHelper.setColor(arrowColor);
-// }        
+        function setDeviceOrientation(dominantAxis) {
+            switch(dominantAxis) {
+                case '+Z': deviceGroup.rotation.set(-Math.PI / 2, 0, 0); break;
+                case '-Z': deviceGroup.rotation.set(Math.PI / 2, 0, 0); break;
+                case '+X': deviceGroup.rotation.set(-Math.PI / 2, -Math.PI / 2, 0); break;
+                case '-X': deviceGroup.rotation.set(-Math.PI / 2, Math.PI / 2, 0); break;
+                case '+Y': deviceGroup.rotation.set(0, 0, 0); break;
+                case '-Y': deviceGroup.rotation.set(0, 0, Math.PI); break;
+            }
+        }
+        
         function initMap() {
             map = L.map('map').setView([20, 0], 2);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -796,9 +889,6 @@
         }
         
         function updateFrameDisplay(frameIndex) {
-            // if (frameCounterElement) {
-            //     frameCounterElement.textContent = `Frame: ${frameIndex + 1} / ${sensorData.length}`;
-            // }
             if (timelineFrameInfo) {
                 timelineFrameInfo.textContent = `Msg ${frameIndex + 1}/${sensorData.length}`;
             }
@@ -920,173 +1010,57 @@
             ledLight.position.set(0.5, 0.65, 0.18);
             deviceGroup.add(ledLight);
             
-            // const arrowHelper = new THREE.ArrowHelper(
-            //     new THREE.Vector3(0, 0, 1),
-            //     new THREE.Vector3(0, 0, 0),
-            //     1.0,
-            //     0x3333ff,
-            //     0.3,
-            //     0.2
-            // );
-            // deviceGroup.add(arrowHelper);
-            // deviceGroup.userData = { arrowHelper };
-            
             // Axis lines
-            // X Axis (RED)
-const xMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
-
-const xPoints = [
-    new THREE.Vector3(-2, 0, 0),
-    new THREE.Vector3(2, 0, 0)
-];
-
-const xLine = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints(xPoints),
-    xMat
-);
-
-scene.add(xLine);
-
-// X arrowheads
-scene.add(new THREE.ArrowHelper(
-    new THREE.Vector3(1,0,0),
-    new THREE.Vector3(1.7,0,0),
-    0.3,
-    0xff0000,
-    0.15,
-    0.08
-));
-
-scene.add(new THREE.ArrowHelper(
-    new THREE.Vector3(-1,0,0),
-    new THREE.Vector3(-1.7,0,0),
-    0.3,
-    0xff0000,
-    0.15,
-    0.08
-));
-
-
-// Y Axis (GREEN)
-const yMat = new THREE.LineBasicMaterial({ color: 0x00ff00 });
-
-const yPoints = [
-    new THREE.Vector3(0,-2,0),
-    new THREE.Vector3(0,2,0)
-];
-
-const yLine = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints(yPoints),
-    yMat
-);
-
-scene.add(yLine);
-
-// Y arrowheads
-scene.add(new THREE.ArrowHelper(
-    new THREE.Vector3(0,1,0),
-    new THREE.Vector3(0,1.7,0),
-    0.3,
-    0x00ff00,
-    0.15,
-    0.08
-));
-
-scene.add(new THREE.ArrowHelper(
-    new THREE.Vector3(0,-1,0),
-    new THREE.Vector3(0,-1.7,0),
-    0.3,
-    0x00ff00,
-    0.15,
-    0.08
-));
-
-
-// Z Axis (BLUE)
-const zMat = new THREE.LineBasicMaterial({ color: 0x0000ff });
-
-const zPoints = [
-    new THREE.Vector3(0,0,-2),
-    new THREE.Vector3(0,0,2)
-];
-
-const zLine = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints(zPoints),
-    zMat
-);
-
-scene.add(zLine);
-
-// Z arrowheads
-scene.add(new THREE.ArrowHelper(
-    new THREE.Vector3(0,0,1),
-    new THREE.Vector3(0,0,1.7),
-    0.3,
-    0x0000ff,
-    0.15,
-    0.08
-));
-
-scene.add(new THREE.ArrowHelper(
-    new THREE.Vector3(0,0,-1),
-    new THREE.Vector3(0,0,-1.7),
-    0.3,
-    0x0000ff,
-    0.15,
-    0.08
-));
+            const xMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
+            const xPoints = [new THREE.Vector3(-2, 0, 0), new THREE.Vector3(2, 0, 0)];
+            const xLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(xPoints), xMat);
+            scene.add(xLine);
+            scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(1.7,0,0), 0.3, 0xff0000, 0.15, 0.08));
+            scene.add(new THREE.ArrowHelper(new THREE.Vector3(-1,0,0), new THREE.Vector3(-1.7,0,0), 0.3, 0xff0000, 0.15, 0.08));
             
-           // ===== AXIS LABELS =====
-
-function createTextSprite(text, color) {
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 128;
-
-    const ctx = canvas.getContext('2d');
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.font = 'Bold 52px Arial';
-    ctx.fillStyle = color;
-    ctx.textAlign = 'center';
-    ctx.fillText(text, canvas.width / 2, 70);
-
-    const texture = new THREE.CanvasTexture(canvas);
-
-    const material = new THREE.SpriteMaterial({
-        map: texture,
-        transparent: true
-    });
-
-    const sprite = new THREE.Sprite(material);
-
-    sprite.scale.set(0.7, 0.35, 1);
-
-    return sprite;
-}
-
-
-// X LABEL
-const xLabel = createTextSprite('X', '#ff0000');
-xLabel.position.set(2.4, 0, 0);
-scene.add(xLabel);
-
-
-// Y LABEL
-const zLabel = createTextSprite('Z', '#00cc00');
-zLabel.position.set(0, 2.4, 0);
-scene.add(zLabel);
-
-
-// Z LABEL
-const yLabel = createTextSprite('Y', '#0000ff');
-yLabel.position.set(0, 0, 2.4);
-scene.add(yLabel);
-
-
-
+            const yMat = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+            const yPoints = [new THREE.Vector3(0,-2,0), new THREE.Vector3(0,2,0)];
+            const yLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(yPoints), yMat);
+            scene.add(yLine);
+            scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,1.7,0), 0.3, 0x00ff00, 0.15, 0.08));
+            scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,-1,0), new THREE.Vector3(0,-1.7,0), 0.3, 0x00ff00, 0.15, 0.08));
+            
+            const zMat = new THREE.LineBasicMaterial({ color: 0x0000ff });
+            const zPoints = [new THREE.Vector3(0,0,-2), new THREE.Vector3(0,0,2)];
+            const zLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(zPoints), zMat);
+            scene.add(zLine);
+            scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,1.7), 0.3, 0x0000ff, 0.15, 0.08));
+            scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,-1), new THREE.Vector3(0,0,-1.7), 0.3, 0x0000ff, 0.15, 0.08));
+            
+            function createTextSprite(text, color) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.font = 'Bold 52px Arial';
+                ctx.fillStyle = color;
+                ctx.textAlign = 'center';
+                ctx.fillText(text, canvas.width / 2, 70);
+                const texture = new THREE.CanvasTexture(canvas);
+                const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+                const sprite = new THREE.Sprite(material);
+                sprite.scale.set(0.7, 0.35, 1);
+                return sprite;
+            }
+            
+            const xLabel = createTextSprite('X', '#ff0000');
+            xLabel.position.set(2.4, 0, 0);
+            scene.add(xLabel);
+            
+            const zLabel = createTextSprite('Z', '#00cc00');
+            zLabel.position.set(0, 2.4, 0);
+            scene.add(zLabel);
+            
+            const yLabel = createTextSprite('Y', '#0000ff');
+            yLabel.position.set(0, 0, 2.4);
+            scene.add(yLabel);
+            
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
             const dirLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -1141,7 +1115,7 @@ scene.add(yLabel);
         function startAnimation() {
             if (isPlaying) return;
             if (!sensorData.length) {
-                if (statusMsgDiv) statusMsgDiv.innerHTML = '❌ No data loaded! Upload a file first.';
+                if (statusMsgDiv) statusMsgDiv.innerHTML = '❌ No data loaded! Upload a file or click demo button.';
                 return;
             }
             isPlaying = true;
@@ -1181,6 +1155,35 @@ scene.add(yLabel);
             if (timelineSlider) timelineSlider.value = 0;
             setDeviceOrientation('+Z');
             if (currentAxisLabelSpan) currentAxisLabelSpan.textContent = '+Z';
+        }
+        
+        function loadDemoData(dataArray, demoName, beeId) {
+            pauseAnimation();
+            sensorData = dataArray.map(d => ({
+                ...d,
+                resultant: calculateResultant(d.x, d.y, d.z)
+            }));
+            currentFrame = 0;
+            
+            resultantData = sensorData.map(d => d.resultant);
+            resultantChart = document.getElementById('resultantCanvas');
+            if (graphContainer) graphContainer.style.display = 'block';
+            
+            updateGraphStats();
+            drawResultantGraph();
+            drawRoute();
+            addAllLocationMarkers();
+            updateVisualization(0);
+            if (timelineSlider && sensorData.length) {
+                timelineSlider.max = sensorData.length - 1;
+            }
+            fitRouteBounds();
+            
+            if (beeNameBadge) beeNameBadge.innerHTML = beeId;
+            if (statusMsgDiv) {
+                statusMsgDiv.innerHTML = `✅ ${sensorData.length} frames loaded | Device: ${beeId} | Demo: ${demoName}`;
+                statusMsgDiv.className = 'status success';
+            }
         }
         
         let isProcessing = false;
@@ -1305,6 +1308,25 @@ scene.add(yLabel);
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('fileDropZone');
         
+        // Demo button handlers
+        document.getElementById('orientationDemoBtn')?.addEventListener('click', () => {
+            loadDemoData(orientationChangeData, "Orientation Change", "BSF-ORIENT");
+            document.querySelectorAll('.demo-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('orientationDemoBtn')?.classList.add('active');
+        });
+        
+        document.getElementById('impactDemoBtn')?.addEventListener('click', () => {
+            loadDemoData(impactDetectedData, "Impact Detected", "BSF-IMPACT");
+            document.querySelectorAll('.demo-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('impactDemoBtn')?.classList.add('active');
+        });
+        
+        document.getElementById('bothDemoBtn')?.addEventListener('click', () => {
+            loadDemoData(bothData, "Both (Impact + Orientation)", "BSF-BOTH");
+            document.querySelectorAll('.demo-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('bothDemoBtn')?.classList.add('active');
+        });
+        
         if (uploadBtn) {
             uploadBtn.addEventListener('click', (e) => { e.stopPropagation(); if(fileInput) fileInput.click(); });
         }
@@ -1314,6 +1336,7 @@ scene.add(yLabel);
         if (fileInput) {
             fileInput.addEventListener('change', (e) => {
                 if (e.target.files && e.target.files[0]) {
+                    document.querySelectorAll('.demo-btn').forEach(btn => btn.classList.remove('active'));
                     processFile(e.target.files[0]);
                 }
                 fileInput.value = '';
@@ -1344,8 +1367,6 @@ scene.add(yLabel);
             });
         }
         
-        
-        
         const playBtnElem = document.getElementById('playBtn');
         const pauseBtnElem = document.getElementById('pauseBtn');
         const resetBtnElem = document.getElementById('resetBtn');
@@ -1367,7 +1388,7 @@ scene.add(yLabel);
         setDeviceOrientation('+Z');
         if (currentAxisLabelSpan) currentAxisLabelSpan.textContent = '+Z';
         
-        console.log('Ready! Upload CSV with msg column containing JSON data');
+        console.log('Ready! Upload CSV or click demo buttons');
     </script>
 </body>
 </html>
